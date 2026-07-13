@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
+const STORAGE_KEY = 'on-the-clock-draft-v1'
+
 const managers = [
   'Declan',
   'AJ',
@@ -42,6 +44,27 @@ function createInitialManagerTotals() {
   return Object.fromEntries(managers.map((manager) => [manager, 0]))
 }
 
+function loadSavedDraftState() {
+  try {
+    const savedDraft = window.localStorage.getItem(STORAGE_KEY)
+
+    if (!savedDraft) {
+      return null
+    }
+
+    const parsedDraft = JSON.parse(savedDraft)
+
+    if (parsedDraft.version !== 1) {
+      return null
+    }
+
+    return parsedDraft
+  } catch (error) {
+    console.error('Unable to restore saved draft:', error)
+    return null
+  }
+}
+
 function formatTime(milliseconds, showTenths = false) {
   const safeMilliseconds = Math.max(0, milliseconds)
   const totalSeconds = Math.floor(safeMilliseconds / 1000)
@@ -55,13 +78,57 @@ function formatTime(milliseconds, showTenths = false) {
 }
 
 function App() {
-  const [draftStarted, setDraftStarted] = useState(false)
-  const [currentPickIndex, setCurrentPickIndex] = useState(0)
-  const [pickStartedAt, setPickStartedAt] = useState(null)
+  const [savedDraft] = useState(() => loadSavedDraftState())
+
+  const [draftStarted, setDraftStarted] = useState(
+    savedDraft?.draftStarted ?? false,
+  )
+
+  const [draftStartTime, setDraftStartTime] = useState(
+    savedDraft?.draftStartTime ?? null,
+  )
+
+  const [currentPickIndex, setCurrentPickIndex] = useState(
+    savedDraft?.currentPickIndex ?? 0,
+  )
+
+  const [pickStartedAt, setPickStartedAt] = useState(
+    savedDraft?.pickStartedAt ?? null,
+  )
+
+  const [currentPickAccumulated, setCurrentPickAccumulated] =
+    useState(savedDraft?.currentPickAccumulated ?? 0)
+
   const [now, setNow] = useState(0)
-  const [completedPicks, setCompletedPicks] = useState([])
-  const [managerTotals, setManagerTotals] = useState(
-    createInitialManagerTotals,
+
+  const [completedPicks, setCompletedPicks] = useState(
+    savedDraft?.completedPicks ?? [],
+  )
+
+  const [managerTotals, setManagerTotals] = useState(() =>
+    savedDraft?.managerTotals ?? createInitialManagerTotals(),
+  )
+
+  const [isPaused, setIsPaused] = useState(
+    savedDraft?.isPaused ?? false,
+  )
+
+  const [pauseStartedAt, setPauseStartedAt] = useState(
+    savedDraft?.pauseStartedAt ?? null,
+  )
+
+  const [showStoppageForm, setShowStoppageForm] = useState(
+    savedDraft?.showStoppageForm ?? false,
+  )
+
+  const [stoppageName, setStoppageName] = useState('')
+
+  const [activeStoppage, setActiveStoppage] = useState(
+    savedDraft?.activeStoppage ?? null,
+  )
+
+  const [stoppages, setStoppages] = useState(
+    savedDraft?.stoppages ?? [],
   )
 
   const currentPick = draftOrder[currentPickIndex]
@@ -69,14 +136,24 @@ function App() {
 
   const currentPickTime = useMemo(() => {
     if (!draftStarted || pickStartedAt === null) {
-      return 0
+      return currentPickAccumulated
     }
 
-    return now - pickStartedAt
-  }, [draftStarted, now, pickStartedAt])
+    if (isPaused) {
+      return currentPickAccumulated
+    }
+
+    return currentPickAccumulated + (now - pickStartedAt)
+  }, [
+    currentPickAccumulated,
+    draftStarted,
+    isPaused,
+    now,
+    pickStartedAt,
+  ])
 
   useEffect(() => {
-    if (!draftStarted) {
+    if (!draftStarted || isPaused) {
       return undefined
     }
 
@@ -87,27 +164,74 @@ function App() {
     return () => {
       window.clearInterval(timerId)
     }
-  }, [draftStarted])
+  }, [draftStarted, isPaused])
+
+  useEffect(() => {
+    const stateToSave = {
+      version: 1,
+      draftStarted,
+      draftStartTime,
+      currentPickIndex,
+      pickStartedAt,
+      currentPickAccumulated,
+      completedPicks,
+      managerTotals,
+      isPaused,
+      pauseStartedAt,
+      showStoppageForm,
+      activeStoppage,
+      stoppages,
+    }
+
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(stateToSave),
+      )
+    } catch (error) {
+      console.error('Unable to save draft progress:', error)
+    }
+  }, [
+    activeStoppage,
+    completedPicks,
+    currentPickAccumulated,
+    currentPickIndex,
+    draftStartTime,
+    draftStarted,
+    isPaused,
+    managerTotals,
+    pauseStartedAt,
+    pickStartedAt,
+    showStoppageForm,
+    stoppages,
+  ])
 
   function handleStartDraft() {
     const startTime = Date.now()
 
+    setDraftStartTime(startTime)
+    setCurrentPickAccumulated(0)
     setPickStartedAt(startTime)
     setNow(startTime)
     setDraftStarted(true)
   }
 
   function handleDrafted() {
-    if (!currentPick || pickStartedAt === null) {
+    if (
+      !currentPick ||
+      pickStartedAt === null ||
+      isPaused
+    ) {
       return
     }
 
     const completedAt = Date.now()
-    const pickDuration = completedAt - pickStartedAt
+    const pickDuration =
+      currentPickAccumulated + (completedAt - pickStartedAt)
 
     const completedPick = {
       ...currentPick,
-      startedAt: pickStartedAt,
+      startedAt: completedAt - pickDuration,
       completedAt,
       duration: pickDuration,
     }
@@ -131,12 +255,13 @@ function App() {
     }
 
     setCurrentPickIndex(nextPickIndex)
+    setCurrentPickAccumulated(0)
     setPickStartedAt(completedAt)
     setNow(completedAt)
   }
 
   function handleUndo() {
-    if (completedPicks.length === 0) {
+    if (completedPicks.length === 0 || isPaused) {
       return
     }
 
@@ -157,12 +282,76 @@ function App() {
     }))
 
     setCurrentPickIndex(revertedPick.overallPick - 1)
-
-    setPickStartedAt(
-      undoneAt - revertedPick.duration,
-    )
-
+    setCurrentPickAccumulated(revertedPick.duration)
+    setPickStartedAt(undoneAt)
     setNow(undoneAt)
+  }
+
+  function handlePause() {
+    if (isPaused || pickStartedAt === null) {
+      return
+    }
+
+    const pausedAt = Date.now()
+    const elapsedBeforePause =
+      currentPickAccumulated + (pausedAt - pickStartedAt)
+
+    setCurrentPickAccumulated(elapsedBeforePause)
+    setPauseStartedAt(pausedAt)
+    setNow(pausedAt)
+    setIsPaused(true)
+    setShowStoppageForm(true)
+  }
+
+  function handleSaveStoppageName(event) {
+    event.preventDefault()
+
+    const trimmedName = stoppageName.trim()
+
+    if (!trimmedName || pauseStartedAt === null) {
+      return
+    }
+
+    setActiveStoppage({
+      name: trimmedName,
+      startedAt: pauseStartedAt,
+      overallPick: currentPick.overallPick,
+      round: currentPick.round,
+      manager: currentPick.manager,
+    })
+
+    setStoppageName('')
+    setShowStoppageForm(false)
+  }
+
+  function handleResume() {
+    if (
+      !isPaused ||
+      !activeStoppage ||
+      pauseStartedAt === null
+    ) {
+      return
+    }
+
+    const resumedAt = Date.now()
+
+    const completedStoppage = {
+      ...activeStoppage,
+      id: `${activeStoppage.startedAt}-${activeStoppage.overallPick}`,
+      endedAt: resumedAt,
+      duration: resumedAt - activeStoppage.startedAt,
+    }
+
+    setStoppages((previousStoppages) => [
+      ...previousStoppages,
+      completedStoppage,
+    ])
+
+    setActiveStoppage(null)
+    setPauseStartedAt(null)
+    setIsPaused(false)
+    setPickStartedAt(resumedAt)
+    setNow(resumedAt)
   }
 
   if (!draftStarted) {
@@ -171,7 +360,9 @@ function App() {
     return (
       <main className="app">
         <section className="card">
-          <p className="eyebrow">Fantasy Football Draft Timer</p>
+          <p className="eyebrow">
+            Fantasy Football Draft Timer
+          </p>
 
           <h1>On The Clock</h1>
 
@@ -183,7 +374,8 @@ function App() {
             <p>First on the clock</p>
             <h2>{firstPick.manager}</h2>
             <span>
-              Round {firstPick.round} · Pick {firstPick.overallPick}
+              Round {firstPick.round} · Pick{' '}
+              {firstPick.overallPick}
             </span>
           </div>
 
@@ -215,17 +407,28 @@ function App() {
         <header className="draft-header">
           <div>
             <p className="eyebrow">On The Clock</p>
+
             <p className="pick-label">
               Round {currentPick.round} · Pick{' '}
               {currentPick.overallPick} of 192
             </p>
           </div>
 
-          <span className="live-indicator">Live</span>
+          <span
+            className={
+              isPaused
+                ? 'live-indicator paused-indicator'
+                : 'live-indicator'
+            }
+          >
+            {isPaused ? 'Paused' : 'Live'}
+          </span>
         </header>
 
         <section className="manager-panel">
-          <p className="manager-status">Currently drafting</p>
+          <p className="manager-status">
+            {isPaused ? 'Draft paused' : 'Currently drafting'}
+          </p>
 
           <h1 className="current-manager">
             {currentPick.manager}
@@ -240,7 +443,9 @@ function App() {
           </div>
 
           <div className="total-time-row">
-            <span>{currentPick.manager}&apos;s total time</span>
+            <span>
+              {currentPick.manager}&apos;s total time
+            </span>
 
             <strong>
               {formatTime(managerTotals[currentPick.manager])}
@@ -250,14 +455,24 @@ function App() {
 
         <section className="next-manager">
           <span>Up next</span>
-          <strong>{nextPick?.manager ?? 'Draft complete'}</strong>
+          <strong>
+            {nextPick?.manager ?? 'Draft complete'}
+          </strong>
         </section>
+
+        {isPaused && activeStoppage && (
+          <section className="active-stoppage">
+            <span>Current stoppage</span>
+            <strong>{activeStoppage.name}</strong>
+          </section>
+        )}
 
         <section className="draft-controls">
           <button
             type="button"
             className="drafted-button"
             onClick={handleDrafted}
+            disabled={isPaused}
           >
             Drafted
           </button>
@@ -267,17 +482,65 @@ function App() {
               type="button"
               className="control-button"
               onClick={handleUndo}
-              disabled={completedPicks.length === 0}
+              disabled={
+                completedPicks.length === 0 || isPaused
+              }
             >
               Undo
             </button>
 
-            <button type="button" className="control-button">
-              Pause
+            <button
+              type="button"
+              className="control-button"
+              onClick={isPaused ? handleResume : handlePause}
+              disabled={isPaused && !activeStoppage}
+            >
+              {isPaused ? 'Resume' : 'Pause'}
             </button>
           </div>
         </section>
       </section>
+
+      {showStoppageForm && (
+        <div className="modal-backdrop">
+          <form
+            className="stoppage-modal"
+            onSubmit={handleSaveStoppageName}
+          >
+            <p className="eyebrow">Draft Paused</p>
+            <h2>Name this stoppage</h2>
+
+            <p className="modal-description">
+              The manager&apos;s timer is frozen. Enter a reason
+              before continuing.
+            </p>
+
+            <label htmlFor="stoppage-name">
+              Stoppage name
+            </label>
+
+            <input
+              id="stoppage-name"
+              type="text"
+              value={stoppageName}
+              onChange={(event) =>
+                setStoppageName(event.target.value)
+              }
+              placeholder="Rain delay"
+              maxLength={50}
+              autoFocus
+            />
+
+            <button
+              type="submit"
+              className="save-stoppage-button"
+              disabled={!stoppageName.trim()}
+            >
+              Save Stoppage
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   )
 }

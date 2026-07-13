@@ -316,3 +316,98 @@ h1 {
     font-size: clamp(3.1rem, 19vw, 4.5rem);
   }
 }
+
+.paused-indicator {
+  background: #d97706;
+}
+
+.active-stoppage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #92400e;
+  border-radius: 14px;
+  background: #451a03;
+  color: #fcd34d;
+}
+
+.active-stoppage strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #fef3c7;
+  text-align: right;
+}
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+  overflow: hidden;
+  background: rgb(0 0 0 / 75%);
+}
+
+.stoppage-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border: 1px solid #4b5563;
+  border-radius: 20px;
+  background: #1f2937;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 40%);
+}
+
+.stoppage-modal h2 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.modal-description {
+  margin: 12px 0 22px;
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
+.stoppage-modal label {
+  display: block;
+  margin-bottom: 8px;
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stoppage-modal input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  outline: none;
+  background: #111827;
+  color: #f9fafb;
+}
+
+.stoppage-modal input:focus {
+  border-color: #f59e0b;
+}
+
+.save-stoppage-button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 15px;
+  border: 0;
+  border-radius: 12px;
+  background: #f59e0b;
+  color: #451a03;
+  font-weight: 900;
+}
+
+.save-stoppage-button:disabled {
+  opacity: 0.4;
+}

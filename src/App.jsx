@@ -1,121 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
+const managers = [
+  'Declan',
+  'AJ',
+  'Liam',
+  'Pat',
+  'Sean',
+  'Nikhil',
+  'Nick',
+  'Sam',
+  'Kevin',
+  'Dylan',
+  'Connor',
+  'Luke',
+]
+
+function createDraftOrder() {
+  const draftOrder = []
+
+  for (let round = 1; round <= 16; round += 1) {
+    const roundManagers =
+      round % 2 === 1 ? managers : [...managers].reverse()
+
+    roundManagers.forEach((manager, index) => {
+      draftOrder.push({
+        overallPick: draftOrder.length + 1,
+        round,
+        pickInRound: index + 1,
+        manager,
+      })
+    })
+  }
+
+  return draftOrder
+}
+
+const draftOrder = createDraftOrder()
+
 function App() {
-  const [count, setCount] = useState(0)
+  const firstPick = draftOrder[0]
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <main className="app">
+      <section className="card">
+        <p className="eyebrow">Fantasy Football Draft Timer</p>
+
+        <h1>On The Clock</h1>
+
+        <p className="draft-format">
+          12 managers · 16 rounds · 192 picks · Snake draft
+        </p>
+
+        <div className="current-pick-preview">
+          <p>First on the clock</p>
+          <h2>{firstPick.manager}</h2>
+          <span>
+            Round {firstPick.round} · Pick {firstPick.overallPick}
+          </span>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+
+        <button type="button" className="start-button">
+          Start Draft
         </button>
-      </section>
 
-      <div className="ticks"></div>
+        <div className="manager-list">
+          <h3>Draft Order</h3>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+          <ol>
+            {managers.map((manager) => (
+              <li key={manager}>{manager}</li>
+            ))}
+          </ol>
         </div>
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </main>
   )
 }
 

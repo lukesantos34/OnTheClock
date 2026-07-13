@@ -84,6 +84,14 @@ function App() {
     savedDraft?.draftStarted ?? false,
   )
 
+  const [draftCompleted, setDraftCompleted] = useState(
+    savedDraft?.draftCompleted ?? false,
+  )
+
+  const [draftCompletedAt, setDraftCompletedAt] = useState(
+    savedDraft?.draftCompletedAt ?? null,
+  )
+
   const [draftStartTime, setDraftStartTime] = useState(
     savedDraft?.draftStartTime ?? null,
   )
@@ -171,6 +179,8 @@ function App() {
       version: 1,
       draftStarted,
       draftStartTime,
+      draftCompleted,
+      draftCompletedAt,
       currentPickIndex,
       pickStartedAt,
       currentPickAccumulated,
@@ -198,6 +208,8 @@ function App() {
     currentPickIndex,
     draftStartTime,
     draftStarted,
+    draftCompleted,
+    draftCompletedAt,
     isPaused,
     managerTotals,
     pauseStartedAt,
@@ -209,6 +221,8 @@ function App() {
   function handleStartDraft() {
     const startTime = Date.now()
 
+    setDraftCompleted(false)
+    setDraftCompletedAt(null)
     setDraftStartTime(startTime)
     setCurrentPickAccumulated(0)
     setPickStartedAt(startTime)
@@ -250,7 +264,12 @@ function App() {
     const nextPickIndex = currentPickIndex + 1
 
     if (nextPickIndex >= draftOrder.length) {
+      setDraftCompletedAt(completedAt)
+      setDraftCompleted(true)
       setDraftStarted(false)
+      setPickStartedAt(null)
+      setCurrentPickAccumulated(0)
+      setNow(completedAt)
       return
     }
 
@@ -352,6 +371,35 @@ function App() {
     setIsPaused(false)
     setPickStartedAt(resumedAt)
     setNow(resumedAt)
+  }
+
+  if (draftCompleted) {
+    return (
+      <main className="app">
+        <section className="card completion-card">
+          <p className="eyebrow">Draft Complete</p>
+
+          <h1>That&apos;s a wrap.</h1>
+
+          <p className="draft-format">
+            All 192 picks have been recorded successfully.
+          </p>
+
+          <div className="current-pick-preview">
+            <p>Completed picks</p>
+            <h2>{completedPicks.length} / 192</h2>
+
+            <span>
+              Results and analytics are ready to be generated.
+            </span>
+          </div>
+
+          <button type="button" className="start-button" disabled>
+            View Results — Coming Next
+          </button>
+        </section>
+      </main>
+    )
   }
 
   if (!draftStarted) {

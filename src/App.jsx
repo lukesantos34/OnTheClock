@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const STORAGE_KEY = 'on-the-clock-draft-v1'
@@ -329,6 +329,504 @@ function calculateDraftResults({
     fastestPick,
     slowestPick,
   }
+}
+
+function ResultsCarousel({
+  draftResults,
+  fastestPickPlayer,
+  slowestPickPlayer,
+  stoppages,
+  onRegenerateTestDraft,
+  onClearTestDraft,
+}) {
+  const carouselRef = useRef(null)
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+
+  const fastestManager = draftResults.managerRankings[0]
+  const slowestManager =
+    draftResults.managerRankings[
+      draftResults.managerRankings.length - 1
+    ]
+
+  const secondSlowestManager =
+    draftResults.managerRankings[
+      draftResults.managerRankings.length - 2
+    ]
+
+  const resultSlides = [
+    {
+      id: 'summary',
+      label: 'Draft Complete',
+    },
+    {
+      id: 'slowest-tease',
+      label: 'The Wait',
+    },
+    {
+      id: 'slowest-runner-up',
+      label: 'Runner-Up',
+    },
+    {
+      id: 'slowest-reveal',
+      label: 'Slowest Drafter',
+    },
+    {
+      id: 'fastest-reveal',
+      label: 'Fastest Drafter',
+    },
+    {
+      id: 'pick-records',
+      label: 'Pick Records',
+    },
+    {
+      id: 'round-records',
+      label: 'Round Records',
+    },
+    {
+      id: 'stoppages',
+      label: 'Stoppages',
+    },
+    {
+      id: 'standings',
+      label: 'Full Standings',
+    },
+  ]
+
+  function goToSlide(index) {
+    const safeIndex = Math.min(
+      Math.max(index, 0),
+      resultSlides.length - 1,
+    )
+
+    const carousel = carouselRef.current
+
+    if (!carousel) {
+      return
+    }
+
+    carousel.scrollTo({
+      left: safeIndex * carousel.clientWidth,
+      behavior: 'smooth',
+    })
+
+    setActiveSlideIndex(safeIndex)
+  }
+
+  function handleCarouselScroll() {
+    const carousel = carouselRef.current
+
+    if (!carousel || carousel.clientWidth === 0) {
+      return
+    }
+
+    const nextIndex = Math.round(
+      carousel.scrollLeft / carousel.clientWidth,
+    )
+
+    setActiveSlideIndex(
+      Math.min(
+        Math.max(nextIndex, 0),
+        resultSlides.length - 1,
+      ),
+    )
+  }
+
+  return (
+    <main className="results-carousel-screen">
+      <header className="results-progress-header">
+        <div className="results-progress-bars">
+          {resultSlides.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              className={
+                index <= activeSlideIndex
+                  ? 'progress-segment progress-segment-active'
+                  : 'progress-segment'
+              }
+              aria-label={`Go to ${slide.label}`}
+              onClick={() => goToSlide(index)}
+            />
+          ))}
+        </div>
+
+        <div className="results-slide-meta">
+          <span>{resultSlides[activeSlideIndex].label}</span>
+
+          <span>
+            {activeSlideIndex + 1} / {resultSlides.length}
+          </span>
+        </div>
+      </header>
+
+      <section
+        ref={carouselRef}
+        className="results-carousel"
+        onScroll={handleCarouselScroll}
+      >
+        <article className="result-slide result-slide-summary">
+          <div className="slide-kicker">On The Clock</div>
+
+          <div className="slide-main-content">
+            <p className="slide-overline">The clock has stopped</p>
+
+            <h1>Draft Complete.</h1>
+
+            <p className="slide-description">
+              Sixteen rounds. Twelve managers. One final answer to
+              who spent the most time on the clock.
+            </p>
+
+            <div className="hero-time">
+              <span>Total elapsed time</span>
+
+              <strong>
+                {formatTime(draftResults.totalElapsedTime)}
+              </strong>
+
+              <small>Including all stoppages</small>
+            </div>
+
+            <div className="summary-time-grid">
+              <div>
+                <span>Active drafting</span>
+                <strong>
+                  {formatTime(draftResults.activeDraftTime)}
+                </strong>
+              </div>
+
+              <div>
+                <span>Stoppages</span>
+                <strong>
+                  {formatTime(draftResults.totalStoppageTime)}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <p className="swipe-prompt">Swipe to reveal the results →</p>
+        </article>
+
+        <article className="result-slide result-slide-tease">
+          <div className="slide-kicker">The Bottom Two</div>
+
+          <div className="slide-main-content centered-slide-content">
+            <p className="slide-overline">A little patience, please</p>
+
+            <h1>Who kept everyone waiting?</h1>
+
+            <p className="large-ellipsis">...</p>
+
+            <p className="slide-description">
+              Two managers spent more time on the clock than everyone
+              else.
+            </p>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-runner-up">
+          <div className="slide-kicker">Second Slowest</div>
+
+          <div className="slide-main-content centered-slide-content">
+            <p className="giant-ranking-number">#11</p>
+
+            <h1>{secondSlowestManager?.manager}</h1>
+
+            <div className="reveal-time">
+              {formatTime(secondSlowestManager?.totalTime ?? 0)}
+            </div>
+
+            <p className="slide-description">
+              Close—but one manager kept the war room waiting even
+              longer.
+            </p>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-slowest">
+          <div className="slide-kicker">The Longest On The Clock</div>
+
+          <div className="slide-main-content centered-slide-content">
+            <p className="giant-ranking-number">#12</p>
+
+            <p className="slide-overline">
+              The wait is finally over
+            </p>
+
+            <h1>{slowestManager?.manager}</h1>
+
+            <div className="reveal-time">
+              {formatTime(slowestManager?.totalTime ?? 0)}
+            </div>
+
+            <p className="slide-description">
+              Hopefully all that extra thinking was worth it.
+            </p>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-fastest">
+          <div className="slide-kicker">Fastest Drafter</div>
+
+          <div className="slide-main-content centered-slide-content">
+            <p className="giant-ranking-number">#1</p>
+
+            <p className="slide-overline">No hesitation</p>
+
+            <h1>{fastestManager?.manager}</h1>
+
+            <div className="reveal-time">
+              {formatTime(fastestManager?.totalTime ?? 0)}
+            </div>
+
+            <p className="slide-description">
+              Quick decisions, no wasted motion, and the fastest total
+              time in the league.
+            </p>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-records">
+          <div className="slide-kicker">Single-Pick Records</div>
+
+          <div className="slide-main-content">
+            <p className="slide-overline">
+              Lightning fast vs. painfully slow
+            </p>
+
+            <h1>Two unforgettable picks.</h1>
+
+            <div className="story-record-card">
+              <span>Fastest Pick</span>
+
+              <strong>{fastestPickPlayer}</strong>
+
+              <p>
+                {draftResults.fastestPick?.manager} drafted{' '}
+                {fastestPickPlayer} in{' '}
+                {formatTime(
+                  draftResults.fastestPick?.duration ?? 0,
+                  true,
+                )}
+                .
+              </p>
+
+              <small>
+                Round {draftResults.fastestPick?.round} · Pick{' '}
+                {draftResults.fastestPick?.pickInRound} · Overall Pick{' '}
+                {draftResults.fastestPick?.overallPick}
+              </small>
+            </div>
+
+            <div className="story-record-card story-record-card-slow">
+              <span>Slowest Pick</span>
+
+              <strong>{slowestPickPlayer}</strong>
+
+              <p>
+                {draftResults.slowestPick?.manager} drafted{' '}
+                {slowestPickPlayer} in{' '}
+                {formatTime(
+                  draftResults.slowestPick?.duration ?? 0,
+                  true,
+                )}
+                .
+              </p>
+
+              <small>
+                Round {draftResults.slowestPick?.round} · Pick{' '}
+                {draftResults.slowestPick?.pickInRound} · Overall Pick{' '}
+                {draftResults.slowestPick?.overallPick}
+              </small>
+            </div>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-rounds">
+          <div className="slide-kicker">Round Records</div>
+
+          <div className="slide-main-content">
+            <p className="slide-overline">Momentum matters</p>
+
+            <h1>Fastest and slowest rounds.</h1>
+
+            <div className="round-story-grid">
+              <section>
+                <span>Fastest Round</span>
+
+                <strong>
+                  Round {draftResults.fastestRound?.round}
+                </strong>
+
+                <p>
+                  {formatTime(
+                    draftResults.fastestRound?.totalTime ?? 0,
+                  )}
+                </p>
+
+                <small>
+                  Average pick:{' '}
+                  {formatTime(
+                    draftResults.fastestRound?.averagePickTime ?? 0,
+                    true,
+                  )}
+                </small>
+              </section>
+
+              <section>
+                <span>Slowest Round</span>
+
+                <strong>
+                  Round {draftResults.slowestRound?.round}
+                </strong>
+
+                <p>
+                  {formatTime(
+                    draftResults.slowestRound?.totalTime ?? 0,
+                  )}
+                </p>
+
+                <small>
+                  Average pick:{' '}
+                  {formatTime(
+                    draftResults.slowestRound?.averagePickTime ?? 0,
+                    true,
+                  )}
+                </small>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-stoppages">
+          <div className="slide-kicker">League-Wide Stoppages</div>
+
+          <div className="slide-main-content">
+            <p className="slide-overline">The clock stopped</p>
+
+            <h1>
+              {formatTime(draftResults.totalStoppageTime)} off the
+              board.
+            </h1>
+
+            {stoppages.length === 0 ? (
+              <p className="slide-description">
+                No stoppages were recorded.
+              </p>
+            ) : (
+              <div className="story-stoppage-list">
+                {stoppages.map((stoppage) => (
+                  <section key={stoppage.id}>
+                    <div>
+                      <strong>{stoppage.name}</strong>
+
+                      <small>
+                        Round {stoppage.round} · Pick{' '}
+                        {stoppage.overallPick} · {stoppage.manager} on
+                        the clock
+                      </small>
+                    </div>
+
+                    <span>{formatTime(stoppage.duration)}</span>
+                  </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-standings">
+          <div className="slide-kicker">Final Results</div>
+
+          <div className="slide-main-content standings-content">
+            <p className="slide-overline">
+              Screenshot this one
+            </p>
+
+            <h1>Fastest to slowest.</h1>
+
+            <ol className="story-standings">
+              {draftResults.managerRankings.map(
+                (managerResult, index) => (
+                  <li key={managerResult.manager}>
+                    <span>#{index + 1}</span>
+
+                    <div>
+                      <strong>{managerResult.manager}</strong>
+
+                      <small>
+                        Avg.{' '}
+                        {formatTime(
+                          managerResult.averagePickTime,
+                          true,
+                        )}
+                      </small>
+                    </div>
+
+                    <strong>
+                      {formatTime(managerResult.totalTime)}
+                    </strong>
+                  </li>
+                ),
+              )}
+            </ol>
+
+            <footer className="standings-footer">
+              <span>
+                Total draft:{' '}
+                {formatTime(draftResults.totalElapsedTime)}
+              </span>
+
+              <span>
+                Stoppages:{' '}
+                {formatTime(draftResults.totalStoppageTime)}
+              </span>
+            </footer>
+
+            {import.meta.env.DEV && (
+              <section className="developer-tools results-dev-tools">
+                <p>Development tools</p>
+
+                <button
+                  type="button"
+                  className="test-draft-button"
+                  onClick={onRegenerateTestDraft}
+                >
+                  Regenerate Test Draft
+                </button>
+
+                <button
+                  type="button"
+                  className="clear-test-button"
+                  onClick={onClearTestDraft}
+                >
+                  Clear Test Draft
+                </button>
+              </section>
+            )}
+          </div>
+        </article>
+      </section>
+
+      <nav className="results-navigation">
+        <button
+          type="button"
+          onClick={() => goToSlide(activeSlideIndex - 1)}
+          disabled={activeSlideIndex === 0}
+        >
+          Previous
+        </button>
+
+        <button
+          type="button"
+          onClick={() => goToSlide(activeSlideIndex + 1)}
+          disabled={activeSlideIndex === resultSlides.length - 1}
+        >
+          Next
+        </button>
+      </nav>
+    </main>
+  )
 }
 
 function App() {
@@ -840,241 +1338,14 @@ function App() {
 
   if (draftCompleted && postDraftDetailsComplete) {
     return (
-      <main className="app results-verification-screen">
-        <section className="card results-verification-card">
-          <p className="eyebrow">Post-Draft Results</p>
-
-          <h1>Results check.</h1>
-
-          <p className="draft-format">
-            This temporary screen lets us verify every calculation
-            before designing the shareable carousel.
-          </p>
-
-          <section className="results-summary-grid">
-            <article className="result-stat">
-              <span>Total elapsed time</span>
-              <strong>
-                {formatTime(draftResults.totalElapsedTime)}
-              </strong>
-              <small>Includes stoppages</small>
-            </article>
-
-            <article className="result-stat">
-              <span>Active draft time</span>
-              <strong>
-                {formatTime(draftResults.activeDraftTime)}
-              </strong>
-              <small>All 192 pick timers</small>
-            </article>
-
-            <article className="result-stat">
-              <span>Stoppage time</span>
-              <strong>
-                {formatTime(draftResults.totalStoppageTime)}
-              </strong>
-              <small>{stoppages.length} stoppages</small>
-            </article>
-          </section>
-
-          <section className="verification-section">
-            <div className="verification-heading">
-              <div>
-                <p className="record-label">Manager Rankings</p>
-                <h2>Fastest to slowest</h2>
-              </div>
-            </div>
-
-            <ol className="manager-ranking-list">
-              {draftResults.managerRankings.map(
-                (result, index) => (
-                  <li key={result.manager}>
-                    <span className="ranking-position">
-                      #{index + 1}
-                    </span>
-
-                    <div className="ranking-manager">
-                      <strong>{result.manager}</strong>
-
-                      <small>
-                        Average{' '}
-                        {formatTime(
-                          result.averagePickTime,
-                          true,
-                        )}{' '}
-                        per pick
-                      </small>
-                    </div>
-
-                    <strong className="ranking-time">
-                      {formatTime(result.totalTime)}
-                    </strong>
-                  </li>
-                ),
-              )}
-            </ol>
-          </section>
-
-          <section className="verification-section">
-            <p className="record-label">Single-Pick Records</p>
-            <h2>Fastest and slowest picks</h2>
-
-            <div className="record-results-grid">
-              <article className="record-result">
-                <span>Fastest Pick</span>
-
-                <strong>{fastestPickPlayer}</strong>
-
-                <p>
-                  {draftResults.fastestPick?.manager} drafted{' '}
-                  {fastestPickPlayer} in{' '}
-                  {formatTime(
-                    draftResults.fastestPick?.duration ?? 0,
-                    true,
-                  )}
-                  .
-                </p>
-
-                <small>
-                  Round {draftResults.fastestPick?.round} · Pick{' '}
-                  {draftResults.fastestPick?.pickInRound} · Overall{' '}
-                  {draftResults.fastestPick?.overallPick}
-                </small>
-              </article>
-
-              <article className="record-result">
-                <span>Slowest Pick</span>
-
-                <strong>{slowestPickPlayer}</strong>
-
-                <p>
-                  {draftResults.slowestPick?.manager} drafted{' '}
-                  {slowestPickPlayer} in{' '}
-                  {formatTime(
-                    draftResults.slowestPick?.duration ?? 0,
-                    true,
-                  )}
-                  .
-                </p>
-
-                <small>
-                  Round {draftResults.slowestPick?.round} · Pick{' '}
-                  {draftResults.slowestPick?.pickInRound} · Overall{' '}
-                  {draftResults.slowestPick?.overallPick}
-                </small>
-              </article>
-            </div>
-          </section>
-
-          <section className="verification-section">
-            <p className="record-label">Round Records</p>
-            <h2>Fastest and slowest rounds</h2>
-
-            <div className="record-results-grid">
-              <article className="record-result">
-                <span>Fastest Round</span>
-
-                <strong>
-                  Round {draftResults.fastestRound?.round}
-                </strong>
-
-                <p>
-                  {formatTime(
-                    draftResults.fastestRound?.totalTime ?? 0,
-                  )}{' '}
-                  total
-                </p>
-
-                <small>
-                  Average pick:{' '}
-                  {formatTime(
-                    draftResults.fastestRound
-                      ?.averagePickTime ?? 0,
-                    true,
-                  )}
-                </small>
-              </article>
-
-              <article className="record-result">
-                <span>Slowest Round</span>
-
-                <strong>
-                  Round {draftResults.slowestRound?.round}
-                </strong>
-
-                <p>
-                  {formatTime(
-                    draftResults.slowestRound?.totalTime ?? 0,
-                  )}{' '}
-                  total
-                </p>
-
-                <small>
-                  Average pick:{' '}
-                  {formatTime(
-                    draftResults.slowestRound
-                      ?.averagePickTime ?? 0,
-                    true,
-                  )}
-                </small>
-              </article>
-            </div>
-          </section>
-
-          <section className="verification-section">
-            <p className="record-label">Stoppages</p>
-            <h2>League-wide delays</h2>
-
-            {stoppages.length === 0 ? (
-              <p className="empty-result">
-                No stoppages were recorded.
-              </p>
-            ) : (
-              <div className="stoppage-results-list">
-                {stoppages.map((stoppage) => (
-                  <article key={stoppage.id}>
-                    <div>
-                      <strong>{stoppage.name}</strong>
-
-                      <small>
-                        Round {stoppage.round} · Overall Pick{' '}
-                        {stoppage.overallPick} ·{' '}
-                        {stoppage.manager} on the clock
-                      </small>
-                    </div>
-
-                    <strong>
-                      {formatTime(stoppage.duration)}
-                    </strong>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {import.meta.env.DEV && (
-            <section className="developer-tools">
-              <p>Development tools</p>
-
-              <button
-                type="button"
-                className="test-draft-button"
-                onClick={handleGenerateTestDraft}
-              >
-                Regenerate Test Draft
-              </button>
-
-              <button
-                type="button"
-                className="clear-test-button"
-                onClick={handleClearTestDraft}
-              >
-                Clear Test Draft
-              </button>
-            </section>
-          )}
-        </section>
-      </main>
+      <ResultsCarousel
+        draftResults={draftResults}
+        fastestPickPlayer={fastestPickPlayer}
+        slowestPickPlayer={slowestPickPlayer}
+        stoppages={stoppages}
+        onRegenerateTestDraft={handleGenerateTestDraft}
+        onClearTestDraft={handleClearTestDraft}
+      />
     )
   }
 

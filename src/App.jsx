@@ -343,15 +343,18 @@ function ResultsCarousel({
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
 
   const fastestManager = draftResults.managerRankings[0]
-  const slowestManager =
-    draftResults.managerRankings[
-      draftResults.managerRankings.length - 1
-    ]
+
+  const fastestManagersTwoThroughSix =
+    draftResults.managerRankings.slice(1, 6)
+
+  const fastestManagersSevenThroughTen =
+    draftResults.managerRankings.slice(6, 10)
 
   const secondSlowestManager =
-    draftResults.managerRankings[
-      draftResults.managerRankings.length - 2
-    ]
+    draftResults.managerRankings[10]
+
+  const slowestManager =
+    draftResults.managerRankings[11]
 
   const resultSlides = [
     {
@@ -359,20 +362,24 @@ function ResultsCarousel({
       label: 'Draft Complete',
     },
     {
-      id: 'slowest-tease',
-      label: 'The Wait',
-    },
-    {
-      id: 'slowest-runner-up',
-      label: 'Runner-Up',
-    },
-    {
-      id: 'slowest-reveal',
-      label: 'Slowest Drafter',
+      id: 'suspense',
+      label: 'The Question',
     },
     {
       id: 'fastest-reveal',
       label: 'Fastest Drafter',
+    },
+    {
+      id: 'rankings-two-six',
+      label: 'Rankings 2–6',
+    },
+    {
+      id: 'rankings-seven-ten',
+      label: 'Rankings 7–10',
+    },
+    {
+      id: 'bottom-two',
+      label: 'The Bottom Two',
     },
     {
       id: 'pick-records',
@@ -508,7 +515,7 @@ function ResultsCarousel({
         </article>
 
         <article className="result-slide result-slide-tease">
-          <div className="slide-kicker">The Bottom Two</div>
+          <div className="slide-kicker">The Question</div>
 
           <div className="slide-main-content centered-slide-content">
             <p className="slide-overline">A little patience, please</p>
@@ -518,49 +525,7 @@ function ResultsCarousel({
             <p className="large-ellipsis">...</p>
 
             <p className="slide-description">
-              Two managers spent more time on the clock than everyone
-              else.
-            </p>
-          </div>
-        </article>
-
-        <article className="result-slide result-slide-runner-up">
-          <div className="slide-kicker">Second Slowest</div>
-
-          <div className="slide-main-content centered-slide-content">
-            <p className="giant-ranking-number">#11</p>
-
-            <h1>{secondSlowestManager?.manager}</h1>
-
-            <div className="reveal-time">
-              {formatTime(secondSlowestManager?.totalTime ?? 0)}
-            </div>
-
-            <p className="slide-description">
-              Close—but one manager kept the war room waiting even
-              longer.
-            </p>
-          </div>
-        </article>
-
-        <article className="result-slide result-slide-slowest">
-          <div className="slide-kicker">The Longest On The Clock</div>
-
-          <div className="slide-main-content centered-slide-content">
-            <p className="giant-ranking-number">#12</p>
-
-            <p className="slide-overline">
-              The wait is finally over
-            </p>
-
-            <h1>{slowestManager?.manager}</h1>
-
-            <div className="reveal-time">
-              {formatTime(slowestManager?.totalTime ?? 0)}
-            </div>
-
-            <p className="slide-description">
-              Hopefully all that extra thinking was worth it.
+              We tracked every second. Now the arguments can finally end.
             </p>
           </div>
         </article>
@@ -568,10 +533,16 @@ function ResultsCarousel({
         <article className="result-slide result-slide-fastest">
           <div className="slide-kicker">Fastest Drafter</div>
 
+          <div className="lightning-decoration" aria-hidden="true">
+            <span>⚡</span>
+            <span>⚡</span>
+            <span>⚡</span>
+          </div>
+
           <div className="slide-main-content centered-slide-content">
             <p className="giant-ranking-number">#1</p>
 
-            <p className="slide-overline">No hesitation</p>
+            <p className="slide-overline">Lightning speed</p>
 
             <h1>{fastestManager?.manager}</h1>
 
@@ -580,8 +551,111 @@ function ResultsCarousel({
             </div>
 
             <p className="slide-description">
-              Quick decisions, no wasted motion, and the fastest total
-              time in the league.
+              Quick decisions, no wasted motion, and the fastest total time
+              in the league.
+            </p>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-ranking-group">
+          <div className="slide-kicker">Still Moving Fast</div>
+
+          <div className="slide-main-content ranking-group-content">
+            <p className="slide-overline">The top half</p>
+
+            <h1>Fastest #2–#6.</h1>
+
+            <ol className="grouped-rankings">
+              {fastestManagersTwoThroughSix.map(
+                (managerResult, index) => (
+                  <li key={managerResult.manager}>
+                    <span>#{index + 2}</span>
+
+                    <strong>{managerResult.manager}</strong>
+
+                    <time>
+                      {formatTime(managerResult.totalTime)}
+                    </time>
+                  </li>
+                ),
+              )}
+            </ol>
+          </div>
+        </article>
+
+        <article className="result-slide result-slide-ranking-group result-slide-late-pack">
+          <div className="slide-kicker">The Pace Slows Down</div>
+
+          <div className="slide-main-content ranking-group-content">
+            <p className="slide-overline">Approaching the danger zone</p>
+
+            <h1>Fastest #7–#10.</h1>
+
+            <ol className="grouped-rankings">
+              {fastestManagersSevenThroughTen.map(
+                (managerResult, index) => (
+                  <li key={managerResult.manager}>
+                    <span>#{index + 7}</span>
+
+                    <strong>{managerResult.manager}</strong>
+
+                    <time>
+                      {formatTime(managerResult.totalTime)}
+                    </time>
+                  </li>
+                ),
+              )}
+            </ol>
+
+            <p className="ranking-warning">
+              Only two managers remain.
+            </p>
+          </div>
+        </article>
+
+        <article
+          className={
+            activeSlideIndex === 5
+              ? 'result-slide result-slide-bottom-two bottom-two-active'
+              : 'result-slide result-slide-bottom-two'
+          }
+        >
+          <div className="slide-kicker">The Final Two</div>
+
+          <div className="slide-main-content bottom-two-content">
+            <p className="slide-overline">Who took the longest?</p>
+
+            <h1>The wait is over.</h1>
+
+            <div className="bottom-two-grid">
+              <section className="bottom-two-card bottom-two-runner-up">
+                <span>#11</span>
+
+                <strong>{secondSlowestManager?.manager}</strong>
+
+                <time>
+                  {formatTime(secondSlowestManager?.totalTime ?? 0)}
+                </time>
+
+                <small>Second longest</small>
+              </section>
+
+              <section className="bottom-two-card bottom-two-winner">
+                <span>#12</span>
+
+                <strong>{slowestManager?.manager}</strong>
+
+                <time>
+                  {formatTime(slowestManager?.totalTime ?? 0)}
+                </time>
+
+                <small>Longest on the clock</small>
+              </section>
+            </div>
+
+            <p className="slowest-caption">
+              {slowestManager?.manager} kept the war room waiting longer
+              than anyone else.
             </p>
           </div>
         </article>

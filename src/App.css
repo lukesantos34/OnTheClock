@@ -411,3 +411,106 @@ h1 {
 .save-stoppage-button:disabled {
   opacity: 0.4;
 }
+
+.developer-tools {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px dashed #6b7280;
+  border-radius: 14px;
+  background: rgb(31 41 55 / 65%);
+}
+
+.developer-tools p {
+  margin: 0 0 12px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.test-draft-button,
+.clear-test-button {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
+.test-draft-button {
+  border: 0;
+  background: #f59e0b;
+  color: #451a03;
+}
+
+.clear-test-button {
+  margin-top: 9px;
+  border: 1px solid #6b7280;
+  background: transparent;
+  color: #d1d5db;
+}
+
+.post-draft-card {
+  padding-bottom: 32px;
+}
+
+.post-draft-form {
+  display: grid;
+  gap: 18px;
+}
+
+.record-pick-question {
+  padding: 20px;
+  border: 1px solid #374151;
+  border-radius: 18px;
+  background: #1f2937;
+}
+
+.record-pick-question h2 {
+  margin: 6px 0;
+  font-size: 1.4rem;
+}
+
+.record-pick-question > p:not(.record-label) {
+  margin: 0 0 20px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.record-label {
+  margin: 0;
+  color: #f59e0b;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.record-pick-question label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.record-pick-question input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  outline: none;
+  background: #111827;
+  color: #f9fafb;
+}
+
+.record-pick-question input:focus {
+  border-color: #f59e0b;
+}
+
+.post-draft-submit {
+  margin-top: 0;
+}
+
+.result-preview {
+  margin-top: 14px;
+}

@@ -77,6 +77,149 @@ function formatTime(milliseconds, showTenths = false) {
   return showTenths ? `${baseTime}.${tenths}` : baseTime
 }
 
+function createTestDraftData() {
+  const managerBaseTimes = {
+    Declan: 28000,
+    AJ: 34000,
+    Liam: 72000,
+    Pat: 46000,
+    Sean: 39000,
+    Nikhil: 52000,
+    Nick: 43000,
+    Sam: 58000,
+    Kevin: 31000,
+    Dylan: 48000,
+    Connor: 66000,
+    Luke: 36000,
+  }
+
+  const draftStartedAt = Date.now() - 4 * 60 * 60 * 1000
+  let timelineCursor = draftStartedAt
+
+  const stoppageTemplates = [
+    {
+      name: 'Food break',
+      overallPick: 47,
+      duration: 12 * 60 * 1000 + 18000,
+    },
+    {
+      name: 'Trade discussion',
+      overallPick: 96,
+      duration: 4 * 60 * 1000 + 42000,
+    },
+    {
+      name: 'Rain delay',
+      overallPick: 151,
+      duration: 18 * 60 * 1000 + 9000,
+    },
+  ]
+
+  const generatedStoppages = []
+  const generatedPicks = []
+
+  draftOrder.forEach((pick, index) => {
+    const stoppage = stoppageTemplates.find(
+      (item) => item.overallPick === pick.overallPick,
+    )
+
+    if (stoppage) {
+      const stoppageStartedAt = timelineCursor
+      const stoppageEndedAt =
+        stoppageStartedAt + stoppage.duration
+
+      generatedStoppages.push({
+        id: `test-stoppage-${pick.overallPick}`,
+        name: stoppage.name,
+        startedAt: stoppageStartedAt,
+        endedAt: stoppageEndedAt,
+        duration: stoppage.duration,
+        overallPick: pick.overallPick,
+        round: pick.round,
+        manager: pick.manager,
+      })
+
+      timelineCursor = stoppageEndedAt
+    }
+
+    const managerBase = managerBaseTimes[pick.manager]
+
+    const roundAdjustment = pick.round * 650
+    const positionAdjustment = pick.pickInRound * 425
+    const variation = ((index * 7919) % 24000) - 7000
+
+    let duration = Math.max(
+      3500,
+      managerBase +
+        roundAdjustment +
+        positionAdjustment +
+        variation,
+    )
+
+    // Deliberately make Overall Pick 39 the fastest pick.
+    if (pick.overallPick === 39) {
+      duration = 1100
+    }
+
+    // Deliberately make Overall Pick 128 the slowest pick.
+    if (pick.overallPick === 128) {
+      duration = 4 * 60 * 1000 + 38600
+    }
+
+    const startedAt = timelineCursor
+    const completedAt = startedAt + duration
+
+    generatedPicks.push({
+      ...pick,
+      startedAt,
+      completedAt,
+      duration,
+    })
+
+    timelineCursor = completedAt
+  })
+
+  const generatedManagerTotals = createInitialManagerTotals()
+
+  generatedPicks.forEach((pick) => {
+    generatedManagerTotals[pick.manager] += pick.duration
+  })
+
+  return {
+    draftStartedAt,
+    draftCompletedAt: timelineCursor,
+    completedPicks: generatedPicks,
+    managerTotals: generatedManagerTotals,
+    stoppages: generatedStoppages,
+  }
+}
+
+function findRecordPicks(completedPicks) {
+  if (completedPicks.length === 0) {
+    return {
+      fastestPick: null,
+      slowestPick: null,
+    }
+  }
+
+  let fastestPick = completedPicks[0]
+  let slowestPick = completedPicks[0]
+
+  completedPicks.forEach((pick) => {
+    if (pick.duration < fastestPick.duration) {
+      fastestPick = pick
+    }
+
+    if (pick.duration > slowestPick.duration) {
+      slowestPick = pick
+    }
+  })
+
+  return {
+    fastestPick,
+    slowestPick,
+  }
+}
+
 function App() {
   const [savedDraft] = useState(() => loadSavedDraftState())
 
@@ -139,8 +282,24 @@ function App() {
     savedDraft?.stoppages ?? [],
   )
 
+  const [fastestPickPlayer, setFastestPickPlayer] = useState(
+    savedDraft?.fastestPickPlayer ?? '',
+  )
+
+  const [slowestPickPlayer, setSlowestPickPlayer] = useState(
+    savedDraft?.slowestPickPlayer ?? '',
+  )
+
+  const [postDraftDetailsComplete, setPostDraftDetailsComplete] =
+    useState(savedDraft?.postDraftDetailsComplete ?? false)  
+
   const currentPick = draftOrder[currentPickIndex]
   const nextPick = draftOrder[currentPickIndex + 1]
+
+  const { fastestPick, slowestPick } = useMemo(
+    () => findRecordPicks(completedPicks),
+    [completedPicks],
+  )  
 
   const currentPickTime = useMemo(() => {
     if (!draftStarted || pickStartedAt === null) {
@@ -191,6 +350,9 @@ function App() {
       showStoppageForm,
       activeStoppage,
       stoppages,
+      fastestPickPlayer,
+      slowestPickPlayer,
+      postDraftDetailsComplete,
     }
 
     try {
@@ -216,6 +378,9 @@ function App() {
     pickStartedAt,
     showStoppageForm,
     stoppages,
+    fastestPickPlayer,
+    slowestPickPlayer,
+    postDraftDetailsComplete,
   ])
 
   function handleStartDraft() {
@@ -373,30 +538,232 @@ function App() {
     setNow(resumedAt)
   }
 
-  if (draftCompleted) {
+  function handleGenerateTestDraft() {
+    const testDraft = createTestDraftData()
+
+    setDraftStartTime(testDraft.draftStartedAt)
+    setDraftCompletedAt(testDraft.draftCompletedAt)
+
+    setCompletedPicks(testDraft.completedPicks)
+    setManagerTotals(testDraft.managerTotals)
+    setStoppages(testDraft.stoppages)
+
+    setCurrentPickIndex(draftOrder.length - 1)
+    setCurrentPickAccumulated(0)
+    setPickStartedAt(null)
+    setNow(testDraft.draftCompletedAt)
+
+    setIsPaused(false)
+    setPauseStartedAt(null)
+    setShowStoppageForm(false)
+    setActiveStoppage(null)
+    setStoppageName('')
+
+    setDraftStarted(false)
+    setDraftCompleted(true)
+
+    setFastestPickPlayer('')
+    setSlowestPickPlayer('')
+    setPostDraftDetailsComplete(false)
+  }
+
+  function handleClearTestDraft() {
+    window.localStorage.removeItem(STORAGE_KEY)
+    window.location.reload()
+  }
+
+  function handleSavePostDraftDetails(event) {
+    event.preventDefault()
+
+    const trimmedFastestPlayer = fastestPickPlayer.trim()
+    const trimmedSlowestPlayer = slowestPickPlayer.trim()
+
+    if (!trimmedFastestPlayer || !trimmedSlowestPlayer) {
+      return
+    }
+
+    setFastestPickPlayer(trimmedFastestPlayer)
+    setSlowestPickPlayer(trimmedSlowestPlayer)
+    setPostDraftDetailsComplete(true)
+  }  
+
+  if (
+    draftCompleted &&
+    !postDraftDetailsComplete &&
+    fastestPick &&
+    slowestPick
+  ) {
+    return (
+      <main className="app">
+        <section className="card post-draft-card">
+          <p className="eyebrow">Draft Complete</p>
+
+          <h1>Two final details.</h1>
+
+          <p className="draft-format">
+            Tell us which players were selected on the fastest and
+            slowest picks.
+          </p>
+
+          <form
+            className="post-draft-form"
+            onSubmit={handleSavePostDraftDetails}
+          >
+            <section className="record-pick-question">
+              <p className="record-label">Fastest Pick</p>
+
+              <h2>
+                {fastestPick.manager} ·{' '}
+                {formatTime(fastestPick.duration, true)}
+              </h2>
+
+              <p>
+                Round {fastestPick.round} · Pick{' '}
+                {fastestPick.pickInRound} of 12 · Overall Pick{' '}
+                {fastestPick.overallPick}
+              </p>
+
+              <label htmlFor="fastest-pick-player">
+                Who was drafted?
+              </label>
+
+              <input
+                id="fastest-pick-player"
+                type="text"
+                value={fastestPickPlayer}
+                onChange={(event) =>
+                  setFastestPickPlayer(event.target.value)
+                }
+                placeholder="Jahmyr Gibbs"
+                maxLength={60}
+                autoComplete="off"
+              />
+            </section>
+
+            <section className="record-pick-question">
+              <p className="record-label">Slowest Pick</p>
+
+              <h2>
+                {slowestPick.manager} ·{' '}
+                {formatTime(slowestPick.duration, true)}
+              </h2>
+
+              <p>
+                Round {slowestPick.round} · Pick{' '}
+                {slowestPick.pickInRound} of 12 · Overall Pick{' '}
+                {slowestPick.overallPick}
+              </p>
+
+              <label htmlFor="slowest-pick-player">
+                Who was drafted?
+              </label>
+
+              <input
+                id="slowest-pick-player"
+                type="text"
+                value={slowestPickPlayer}
+                onChange={(event) =>
+                  setSlowestPickPlayer(event.target.value)
+                }
+                placeholder="DK Metcalf"
+                maxLength={60}
+                autoComplete="off"
+              />
+            </section>
+
+            <button
+              type="submit"
+              className="start-button post-draft-submit"
+              disabled={
+                !fastestPickPlayer.trim() ||
+                !slowestPickPlayer.trim()
+              }
+            >
+              Continue to Results
+            </button>
+          </form>
+
+          {import.meta.env.DEV && (
+            <section className="developer-tools">
+              <p>Development tools</p>
+
+              <button
+                type="button"
+                className="test-draft-button"
+                onClick={handleGenerateTestDraft}
+              >
+                Regenerate Test Draft
+              </button>
+
+              <button
+                type="button"
+                className="clear-test-button"
+                onClick={handleClearTestDraft}
+              >
+                Clear Test Draft
+              </button>
+            </section>
+          )}
+        </section>
+      </main>
+    )
+  }
+
+  if (draftCompleted && postDraftDetailsComplete) {
     return (
       <main className="app">
         <section className="card completion-card">
-          <p className="eyebrow">Draft Complete</p>
+          <p className="eyebrow">Post-Draft Results</p>
 
-          <h1>That&apos;s a wrap.</h1>
+          <h1>Results ready.</h1>
 
           <p className="draft-format">
-            All 192 picks have been recorded successfully.
+            The full results experience is coming next.
           </p>
 
           <div className="current-pick-preview">
-            <p>Completed picks</p>
-            <h2>{completedPicks.length} / 192</h2>
+            <p>Fastest Pick</p>
+
+            <h2>{fastestPickPlayer}</h2>
 
             <span>
-              Results and analytics are ready to be generated.
+              {fastestPick?.manager} ·{' '}
+              {formatTime(fastestPick?.duration ?? 0, true)}
             </span>
           </div>
 
-          <button type="button" className="start-button" disabled>
-            View Results — Coming Next
-          </button>
+          <div className="current-pick-preview result-preview">
+            <p>Slowest Pick</p>
+
+            <h2>{slowestPickPlayer}</h2>
+
+            <span>
+              {slowestPick?.manager} ·{' '}
+              {formatTime(slowestPick?.duration ?? 0, true)}
+            </span>
+          </div>
+
+          {import.meta.env.DEV && (
+            <section className="developer-tools">
+              <p>Development tools</p>
+
+              <button
+                type="button"
+                className="test-draft-button"
+                onClick={handleGenerateTestDraft}
+              >
+                Regenerate Test Draft
+              </button>
+
+              <button
+                type="button"
+                className="clear-test-button"
+                onClick={handleClearTestDraft}
+              >
+                Clear Test Draft
+              </button>
+            </section>
+          )}
         </section>
       </main>
     )
@@ -434,7 +801,27 @@ function App() {
           >
             Start Draft
           </button>
+      {import.meta.env.DEV && (
+        <section className="developer-tools">
+          <p>Development tools</p>
 
+          <button
+            type="button"
+            className="test-draft-button"
+            onClick={handleGenerateTestDraft}
+          >
+            Generate Completed Test Draft
+          </button>
+
+          <button
+            type="button"
+            className="clear-test-button"
+            onClick={handleClearTestDraft}
+          >
+            Clear Saved Test Draft
+          </button>
+        </section>
+      )}
           <div className="manager-list">
             <h3>Draft Order</h3>
 
@@ -457,8 +844,7 @@ function App() {
             <p className="eyebrow">On The Clock</p>
 
             <p className="pick-label">
-              Round {currentPick.round} · Pick{' '}
-              {currentPick.overallPick} of 192
+              Round {currentPick.round} · Pick {currentPick.pickInRound} · {currentPick.overallPick} of 192
             </p>
           </div>
 

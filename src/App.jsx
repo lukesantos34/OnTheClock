@@ -68,11 +68,21 @@ function loadSavedDraftState() {
 function formatTime(milliseconds, showTenths = false) {
   const safeMilliseconds = Math.max(0, milliseconds)
   const totalSeconds = Math.floor(safeMilliseconds / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
+
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
   const tenths = Math.floor((safeMilliseconds % 1000) / 100)
 
-  const baseTime = `${minutes}:${String(seconds).padStart(2, '0')}`
+  let baseTime
+
+  if (hours > 0) {
+    baseTime = `${hours}:${String(minutes).padStart(2, '0')}:${String(
+      seconds,
+    ).padStart(2, '0')}`
+  } else {
+    baseTime = `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
 
   return showTenths ? `${baseTime}.${tenths}` : baseTime
 }
@@ -220,6 +230,107 @@ function findRecordPicks(completedPicks) {
   }
 }
 
+function calculateDraftResults({
+  completedPicks,
+  managerTotals,
+  stoppages,
+  draftStartTime,
+  draftCompletedAt,
+}) {
+  const managerRankings = managers
+    .map((manager) => ({
+      manager,
+      totalTime: managerTotals[manager] ?? 0,
+      averagePickTime:
+        completedPicks.filter(
+          (pick) => pick.manager === manager,
+        ).length > 0
+          ? (managerTotals[manager] ?? 0) /
+            completedPicks.filter(
+              (pick) => pick.manager === manager,
+            ).length
+          : 0,
+    }))
+    .sort((managerA, managerB) => {
+      return managerA.totalTime - managerB.totalTime
+    })
+
+  const activeDraftTime = completedPicks.reduce(
+    (total, pick) => total + pick.duration,
+    0,
+  )
+
+  const totalStoppageTime = stoppages.reduce(
+    (total, stoppage) => total + stoppage.duration,
+    0,
+  )
+
+  const totalElapsedTime =
+    draftStartTime !== null && draftCompletedAt !== null
+      ? Math.max(0, draftCompletedAt - draftStartTime)
+      : activeDraftTime + totalStoppageTime
+
+  const roundResults = Array.from(
+    { length: 16 },
+    (_, index) => {
+      const round = index + 1
+
+      const roundPicks = completedPicks.filter(
+        (pick) => pick.round === round,
+      )
+
+      const totalTime = roundPicks.reduce(
+        (total, pick) => total + pick.duration,
+        0,
+      )
+
+      return {
+        round,
+        totalTime,
+        averagePickTime:
+          roundPicks.length > 0
+            ? totalTime / roundPicks.length
+            : 0,
+        pickCount: roundPicks.length,
+      }
+    },
+  )
+
+  let fastestRound = roundResults[0] ?? null
+  let slowestRound = roundResults[0] ?? null
+
+  roundResults.forEach((roundResult) => {
+    if (
+      fastestRound === null ||
+      roundResult.totalTime < fastestRound.totalTime
+    ) {
+      fastestRound = roundResult
+    }
+
+    if (
+      slowestRound === null ||
+      roundResult.totalTime > slowestRound.totalTime
+    ) {
+      slowestRound = roundResult
+    }
+  })
+
+  const { fastestPick, slowestPick } =
+    findRecordPicks(completedPicks)
+
+  return {
+    managerRankings,
+    activeDraftTime,
+    totalStoppageTime,
+    totalElapsedTime,
+    roundResults,
+    fastestRound,
+    slowestRound,
+    fastestPick,
+    slowestPick,
+  }
+}
+
 function App() {
   const [savedDraft] = useState(() => loadSavedDraftState())
 
@@ -299,6 +410,24 @@ function App() {
   const { fastestPick, slowestPick } = useMemo(
     () => findRecordPicks(completedPicks),
     [completedPicks],
+  )
+  
+  const draftResults = useMemo(
+    () =>
+      calculateDraftResults({
+        completedPicks,
+        managerTotals,
+        stoppages,
+        draftStartTime,
+        draftCompletedAt,
+      }),
+    [
+      completedPicks,
+      draftCompletedAt,
+      draftStartTime,
+      managerTotals,
+      stoppages,
+    ],
   )  
 
   const currentPickTime = useMemo(() => {
@@ -711,37 +840,217 @@ function App() {
 
   if (draftCompleted && postDraftDetailsComplete) {
     return (
-      <main className="app">
-        <section className="card completion-card">
+      <main className="app results-verification-screen">
+        <section className="card results-verification-card">
           <p className="eyebrow">Post-Draft Results</p>
 
-          <h1>Results ready.</h1>
+          <h1>Results check.</h1>
 
           <p className="draft-format">
-            The full results experience is coming next.
+            This temporary screen lets us verify every calculation
+            before designing the shareable carousel.
           </p>
 
-          <div className="current-pick-preview">
-            <p>Fastest Pick</p>
+          <section className="results-summary-grid">
+            <article className="result-stat">
+              <span>Total elapsed time</span>
+              <strong>
+                {formatTime(draftResults.totalElapsedTime)}
+              </strong>
+              <small>Includes stoppages</small>
+            </article>
 
-            <h2>{fastestPickPlayer}</h2>
+            <article className="result-stat">
+              <span>Active draft time</span>
+              <strong>
+                {formatTime(draftResults.activeDraftTime)}
+              </strong>
+              <small>All 192 pick timers</small>
+            </article>
 
-            <span>
-              {fastestPick?.manager} ·{' '}
-              {formatTime(fastestPick?.duration ?? 0, true)}
-            </span>
-          </div>
+            <article className="result-stat">
+              <span>Stoppage time</span>
+              <strong>
+                {formatTime(draftResults.totalStoppageTime)}
+              </strong>
+              <small>{stoppages.length} stoppages</small>
+            </article>
+          </section>
 
-          <div className="current-pick-preview result-preview">
-            <p>Slowest Pick</p>
+          <section className="verification-section">
+            <div className="verification-heading">
+              <div>
+                <p className="record-label">Manager Rankings</p>
+                <h2>Fastest to slowest</h2>
+              </div>
+            </div>
 
-            <h2>{slowestPickPlayer}</h2>
+            <ol className="manager-ranking-list">
+              {draftResults.managerRankings.map(
+                (result, index) => (
+                  <li key={result.manager}>
+                    <span className="ranking-position">
+                      #{index + 1}
+                    </span>
 
-            <span>
-              {slowestPick?.manager} ·{' '}
-              {formatTime(slowestPick?.duration ?? 0, true)}
-            </span>
-          </div>
+                    <div className="ranking-manager">
+                      <strong>{result.manager}</strong>
+
+                      <small>
+                        Average{' '}
+                        {formatTime(
+                          result.averagePickTime,
+                          true,
+                        )}{' '}
+                        per pick
+                      </small>
+                    </div>
+
+                    <strong className="ranking-time">
+                      {formatTime(result.totalTime)}
+                    </strong>
+                  </li>
+                ),
+              )}
+            </ol>
+          </section>
+
+          <section className="verification-section">
+            <p className="record-label">Single-Pick Records</p>
+            <h2>Fastest and slowest picks</h2>
+
+            <div className="record-results-grid">
+              <article className="record-result">
+                <span>Fastest Pick</span>
+
+                <strong>{fastestPickPlayer}</strong>
+
+                <p>
+                  {draftResults.fastestPick?.manager} drafted{' '}
+                  {fastestPickPlayer} in{' '}
+                  {formatTime(
+                    draftResults.fastestPick?.duration ?? 0,
+                    true,
+                  )}
+                  .
+                </p>
+
+                <small>
+                  Round {draftResults.fastestPick?.round} · Pick{' '}
+                  {draftResults.fastestPick?.pickInRound} · Overall{' '}
+                  {draftResults.fastestPick?.overallPick}
+                </small>
+              </article>
+
+              <article className="record-result">
+                <span>Slowest Pick</span>
+
+                <strong>{slowestPickPlayer}</strong>
+
+                <p>
+                  {draftResults.slowestPick?.manager} drafted{' '}
+                  {slowestPickPlayer} in{' '}
+                  {formatTime(
+                    draftResults.slowestPick?.duration ?? 0,
+                    true,
+                  )}
+                  .
+                </p>
+
+                <small>
+                  Round {draftResults.slowestPick?.round} · Pick{' '}
+                  {draftResults.slowestPick?.pickInRound} · Overall{' '}
+                  {draftResults.slowestPick?.overallPick}
+                </small>
+              </article>
+            </div>
+          </section>
+
+          <section className="verification-section">
+            <p className="record-label">Round Records</p>
+            <h2>Fastest and slowest rounds</h2>
+
+            <div className="record-results-grid">
+              <article className="record-result">
+                <span>Fastest Round</span>
+
+                <strong>
+                  Round {draftResults.fastestRound?.round}
+                </strong>
+
+                <p>
+                  {formatTime(
+                    draftResults.fastestRound?.totalTime ?? 0,
+                  )}{' '}
+                  total
+                </p>
+
+                <small>
+                  Average pick:{' '}
+                  {formatTime(
+                    draftResults.fastestRound
+                      ?.averagePickTime ?? 0,
+                    true,
+                  )}
+                </small>
+              </article>
+
+              <article className="record-result">
+                <span>Slowest Round</span>
+
+                <strong>
+                  Round {draftResults.slowestRound?.round}
+                </strong>
+
+                <p>
+                  {formatTime(
+                    draftResults.slowestRound?.totalTime ?? 0,
+                  )}{' '}
+                  total
+                </p>
+
+                <small>
+                  Average pick:{' '}
+                  {formatTime(
+                    draftResults.slowestRound
+                      ?.averagePickTime ?? 0,
+                    true,
+                  )}
+                </small>
+              </article>
+            </div>
+          </section>
+
+          <section className="verification-section">
+            <p className="record-label">Stoppages</p>
+            <h2>League-wide delays</h2>
+
+            {stoppages.length === 0 ? (
+              <p className="empty-result">
+                No stoppages were recorded.
+              </p>
+            ) : (
+              <div className="stoppage-results-list">
+                {stoppages.map((stoppage) => (
+                  <article key={stoppage.id}>
+                    <div>
+                      <strong>{stoppage.name}</strong>
+
+                      <small>
+                        Round {stoppage.round} · Overall Pick{' '}
+                        {stoppage.overallPick} ·{' '}
+                        {stoppage.manager} on the clock
+                      </small>
+                    </div>
+
+                    <strong>
+                      {formatTime(stoppage.duration)}
+                    </strong>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
 
           {import.meta.env.DEV && (
             <section className="developer-tools">

@@ -524,23 +524,41 @@ function ResultsCarousel({
           <p className="swipe-prompt">Swipe to reveal the results →</p>
         </article>
 
-        <article className="result-slide result-slide-tease">
+        <article
+          className={
+            activeSlideIndex === 1
+              ? 'result-slide result-slide-tease slide-active'
+              : 'result-slide result-slide-tease'
+          }
+        >
           <div className="slide-kicker">The Question</div>
 
           <div className="slide-main-content centered-slide-content">
-            <p className="slide-overline">A little patience, please</p>
+            <p className="slide-overline reveal-item reveal-delay-1">
+              A little patience, please
+            </p>
 
-            <h1>Who kept everyone waiting?</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Who kept everyone waiting?
+            </h1>
 
-            <p className="large-ellipsis">...</p>
+            <p className="large-ellipsis reveal-item reveal-delay-3">
+              ...
+            </p>
 
-            <p className="slide-description">
+            <p className="slide-description reveal-item reveal-delay-4">
               We tracked every second. Now the arguments can finally end.
             </p>
           </div>
         </article>
 
-        <article className="result-slide result-slide-fastest">
+        <article
+          className={
+            activeSlideIndex === 2
+              ? 'result-slide result-slide-fastest slide-active'
+              : 'result-slide result-slide-fastest'
+          }
+        >
           <div className="slide-kicker">Fastest Drafter</div>
 
           <div className="lightning-decoration" aria-hidden="true">
@@ -550,35 +568,54 @@ function ResultsCarousel({
           </div>
 
           <div className="slide-main-content centered-slide-content">
-            <p className="giant-ranking-number">#1</p>
+            <p className="giant-ranking-number reveal-item reveal-delay-1">
+              #1
+            </p>
 
-            <p className="slide-overline">Lightning speed</p>
+            <p className="slide-overline reveal-item reveal-delay-2">
+              Lightning speed
+            </p>
 
-            <h1>{fastestManager?.manager}</h1>
+            <h1 className="reveal-item reveal-delay-3">
+              {fastestManager?.manager}
+            </h1>
 
-            <div className="reveal-time">
+            <div className="reveal-time reveal-item reveal-delay-4">
               {formatTime(fastestManager?.totalTime ?? 0)}
             </div>
 
-            <p className="slide-description">
+            <p className="slide-description reveal-item reveal-delay-5">
               Quick decisions, no wasted motion, and the fastest total time
               in the league.
             </p>
           </div>
         </article>
 
-        <article className="result-slide result-slide-ranking-group">
+        <article
+          className={
+            activeSlideIndex === 3
+              ? 'result-slide result-slide-ranking-group slide-active'
+              : 'result-slide result-slide-ranking-group'
+          }
+        >
           <div className="slide-kicker">Still Moving Fast</div>
 
           <div className="slide-main-content ranking-group-content">
-            <p className="slide-overline">The top half</p>
+            <p className="slide-overline reveal-item reveal-delay-1">
+              The top half
+            </p>
 
-            <h1>Fastest #2–#6.</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Fastest #2–#6.
+            </h1>
 
             <ol className="grouped-rankings">
               {fastestManagersTwoThroughSix.map(
                 (managerResult, index) => (
-                  <li key={managerResult.manager}>
+                  <li
+                    key={managerResult.manager}
+                    className={`reveal-item reveal-delay-${index + 3}`}
+                  >
                     <span>#{index + 2}</span>
 
                     <strong>{managerResult.manager}</strong>
@@ -593,18 +630,31 @@ function ResultsCarousel({
           </div>
         </article>
 
-        <article className="result-slide result-slide-ranking-group result-slide-late-pack">
+        <article
+          className={
+            activeSlideIndex === 4
+              ? 'result-slide result-slide-ranking-group result-slide-late-pack slide-active'
+              : 'result-slide result-slide-ranking-group result-slide-late-pack'
+          }
+        >
           <div className="slide-kicker">The Pace Slows Down</div>
 
           <div className="slide-main-content ranking-group-content">
-            <p className="slide-overline">Approaching the danger zone</p>
+            <p className="slide-overline reveal-item reveal-delay-1">
+              Approaching the danger zone
+            </p>
 
-            <h1>Fastest #7–#10.</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Fastest #7–#10.
+            </h1>
 
             <ol className="grouped-rankings">
               {fastestManagersSevenThroughTen.map(
                 (managerResult, index) => (
-                  <li key={managerResult.manager}>
+                  <li
+                    key={managerResult.manager}
+                    className={`reveal-item reveal-delay-${index + 3}`}
+                  >
                     <span>#{index + 7}</span>
 
                     <strong>{managerResult.manager}</strong>
@@ -617,7 +667,7 @@ function ResultsCarousel({
               )}
             </ol>
 
-            <p className="ranking-warning">
+            <p className="ranking-warning reveal-item reveal-delay-7">
               Only two managers remain.
             </p>
           </div>
@@ -626,7 +676,7 @@ function ResultsCarousel({
         <article
           className={
             activeSlideIndex === 5
-              ? 'result-slide result-slide-bottom-two bottom-two-active'
+              ? 'result-slide result-slide-bottom-two slide-active bottom-two-active'
               : 'result-slide result-slide-bottom-two'
           }
         >
@@ -670,17 +720,25 @@ function ResultsCarousel({
           </div>
         </article>
 
-        <article className="result-slide result-slide-records">
+        <article
+          className={
+            activeSlideIndex === 6
+              ? 'result-slide result-slide-records slide-active'
+              : 'result-slide result-slide-records'
+          }
+        >
           <div className="slide-kicker">Single-Pick Records</div>
 
           <div className="slide-main-content">
-            <p className="slide-overline">
+            <p className="slide-overline reveal-item reveal-delay-1">
               Lightning fast vs. painfully slow
             </p>
 
-            <h1>Two picks. Two extremes.</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Two picks. Two extremes.
+            </h1>
 
-            <div className="story-record-card">
+            <div className="story-record-card reveal-item reveal-delay-3">
               <span>Fastest Pick</span>
 
               <strong>{fastestPickPlayer}</strong>
@@ -702,7 +760,7 @@ function ResultsCarousel({
               </small>
             </div>
 
-            <div className="story-record-card story-record-card-slow">
+            <div className="story-record-card story-record-card-slow reveal-item reveal-delay-4">
               <span>Slowest Pick</span>
 
               <strong>{slowestPickPlayer}</strong>
@@ -726,16 +784,26 @@ function ResultsCarousel({
           </div>
         </article>
 
-        <article className="result-slide result-slide-rounds">
+        <article
+          className={
+            activeSlideIndex === 7
+              ? 'result-slide result-slide-rounds slide-active'
+              : 'result-slide result-slide-rounds'
+          }
+        >
           <div className="slide-kicker">Round Records</div>
 
           <div className="slide-main-content">
-            <p className="slide-overline">Momentum matters</p>
+            <p className="slide-overline reveal-item reveal-delay-1">
+              Momentum matters
+            </p>
 
-            <h1>Fastest and slowest rounds.</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Fastest and slowest rounds.
+            </h1>
 
             <div className="round-story-grid">
-              <section>
+              <section className="reveal-item reveal-delay-3">
                 <span>Fastest Round</span>
 
                 <strong>
@@ -757,7 +825,7 @@ function ResultsCarousel({
                 </small>
               </section>
 
-              <section>
+              <section className="reveal-item reveal-delay-4">
                 <span>Slowest Round</span>
 
                 <strong>
@@ -782,25 +850,36 @@ function ResultsCarousel({
           </div>
         </article>
 
-        <article className="result-slide result-slide-stoppages">
+        <article
+          className={
+            activeSlideIndex === 8
+              ? 'result-slide result-slide-stoppages slide-active'
+              : 'result-slide result-slide-stoppages'
+          }
+        >
           <div className="slide-kicker">League-Wide Stoppages</div>
 
           <div className="slide-main-content">
-            <p className="slide-overline">The clock stopped</p>
+            <p className="slide-overline reveal-item reveal-delay-1">
+              The clock stopped
+            </p>
 
-            <h1>
+            <h1 className="reveal-item reveal-delay-2">
               {formatTime(draftResults.totalStoppageTime)} off the
               board.
             </h1>
 
             {stoppages.length === 0 ? (
-              <p className="slide-description">
+              <p className="slide-description reveal-item reveal-delay-3">
                 No stoppages were recorded.
               </p>
             ) : (
               <div className="story-stoppage-list">
-                {stoppages.map((stoppage) => (
-                  <section key={stoppage.id}>
+                {stoppages.map((stoppage, index) => (
+                  <section
+                    key={stoppage.id}
+                    className={`reveal-item reveal-delay-${index + 3}`}
+                  >
                     <div>
                       <strong>{stoppage.name}</strong>
 
@@ -819,20 +898,31 @@ function ResultsCarousel({
           </div>
         </article>
 
-        <article className="result-slide result-slide-standings">
+        <article
+          className={
+            activeSlideIndex === 9
+              ? 'result-slide result-slide-standings slide-active'
+              : 'result-slide result-slide-standings'
+          }
+        >
           <div className="slide-kicker">Final Results</div>
 
           <div className="slide-main-content standings-content">
-            <p className="slide-overline">
+            <p className="slide-overline reveal-item reveal-delay-1">
               Screenshot this one
             </p>
 
-            <h1>Fastest to slowest.</h1>
+            <h1 className="reveal-item reveal-delay-2">
+              Fastest to slowest.
+            </h1>
 
             <ol className="story-standings">
               {draftResults.managerRankings.map(
                 (managerResult, index) => (
-                  <li key={managerResult.manager}>
+                  <li
+                    key={managerResult.manager}
+                    className={`reveal-item reveal-delay-${index + 3}`}
+                  >
                     <span>#{index + 1}</span>
 
                     <strong className="standings-manager-name">
@@ -847,7 +937,7 @@ function ResultsCarousel({
               )}
             </ol>
 
-            <footer className="standings-footer">
+            <footer className="standings-footer reveal-item reveal-delay-15">
               <span>
                 Total draft:{' '}
                 {formatTime(draftResults.totalElapsedTime)}

@@ -659,7 +659,7 @@ h1 {
 .result-slide h1 {
   max-width: 100%;
   overflow-wrap: anywhere;
-  font-size: clamp(2.8rem, 14vw, 5rem);
+  font-size: clamp(2.4rem, 12vw, 5rem);
   line-height: 0.94;
   text-transform: uppercase;
 }
@@ -769,8 +769,8 @@ h1 {
 }
 
 .story-record-card {
-  margin-top: 22px;
-  padding: 18px;
+  margin-top: 14px;
+  padding: 14px 16px;
   border: 1px solid rgb(255 255 255 / 18%);
   background: rgb(0 0 0 / 24%);
 }
@@ -790,8 +790,8 @@ h1 {
 }
 
 .story-record-card > strong {
-  margin-top: 7px;
-  font-size: 1.7rem;
+  margin-top: 6px;
+  font-size: 1.35rem;
 }
 
 .story-record-card p {
@@ -809,12 +809,12 @@ h1 {
 
 .round-story-grid {
   display: grid;
-  gap: 14px;
-  margin-top: 28px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .round-story-grid section {
-  padding: 22px;
+  padding: 14px 16px;
   border: 1px solid rgb(255 255 255 / 18%);
   background: rgb(0 0 0 / 20%);
 }
@@ -833,13 +833,13 @@ h1 {
 }
 
 .round-story-grid strong {
-  margin-top: 8px;
-  font-size: 2rem;
+  margin-top: 6px;
+  font-size: 1.4rem;
 }
 
 .round-story-grid p {
-  margin: 8px 0;
-  font-size: 2.7rem;
+  margin: 6px 0;
+  font-size: 1.7rem;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
 }
@@ -850,16 +850,16 @@ h1 {
 
 .story-stoppage-list {
   display: grid;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .story-stoppage-list section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 17px;
+  gap: 12px;
+  padding: 12px 13px;
   border: 1px solid rgb(255 255 255 / 18%);
   background: rgb(0 0 0 / 20%);
 }
@@ -874,9 +874,10 @@ h1 {
 }
 
 .story-stoppage-list small {
-  margin-top: 5px;
+  margin-top: 4px;
   color: #9ca3af;
-  line-height: 1.4;
+  font-size: 0.72rem;
+  line-height: 1.3;
 }
 
 .story-stoppage-list section > span {
@@ -895,19 +896,19 @@ h1 {
 
 .story-standings {
   display: grid;
-  gap: 5px;
-  margin: 10px 0 0;
+  gap: 3px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .story-standings li {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  min-height: 31px;
-  padding: 4px 7px;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 6px;
   border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 
@@ -920,11 +921,11 @@ h1 {
 .standings-manager-name {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
 }
 
 .standings-manager-time {
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -932,14 +933,18 @@ h1 {
 .standings-footer {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 6px;
   color: #9ca3af;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
 }
 
 .results-dev-tools {
   margin-bottom: 20px;
+}
+
+.result-slide-standings .results-dev-tools {
+  display: none;
 }
 
 .results-navigation {
@@ -994,7 +999,15 @@ h1 {
   }
 
   .result-slide h1 {
-    font-size: clamp(2.35rem, 13vw, 3.4rem);
+    font-size: clamp(1.95rem, 11vw, 2.9rem);
+  }
+
+  .story-record-card {
+    padding: 12px 13px;
+  }
+
+  .story-stoppage-list section {
+    padding: 10px 11px;
   }
 
   .story-standings li {
@@ -1020,18 +1033,18 @@ h1 {
 
 .grouped-rankings {
   display: grid;
-  gap: clamp(7px, 1.4vh, 13px);
-  margin: clamp(22px, 5vh, 40px) 0 0;
+  gap: clamp(6px, 1.2vh, 10px);
+  margin: clamp(16px, 4vh, 28px) 0 0;
   padding: 0;
   list-style: none;
 }
 
 .grouped-rankings li {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: clamp(11px, 1.8vh, 16px);
+  gap: 10px;
+  padding: clamp(9px, 1.6vh, 12px);
   border: 1px solid rgb(255 255 255 / 16%);
   background: rgb(0 0 0 / 22%);
 }
@@ -1045,7 +1058,7 @@ h1 {
 .grouped-rankings li > strong {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: clamp(1.05rem, 5vw, 1.4rem);
+  font-size: clamp(0.95rem, 4.5vw, 1.2rem);
 }
 
 .grouped-rankings time {
@@ -1061,9 +1074,9 @@ h1 {
 }
 
 .ranking-warning {
-  margin: clamp(18px, 4vh, 34px) 0 0;
+  margin: clamp(12px, 3vh, 20px) 0 0;
   color: #fca5a5;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-align: center;
@@ -1083,13 +1096,13 @@ h1 {
 .bottom-two-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: clamp(24px, 5vh, 42px);
+  gap: 10px;
+  margin-top: clamp(16px, 4vh, 28px);
 }
 
 .bottom-two-card {
   min-width: 0;
-  padding: clamp(16px, 3vh, 24px) 12px;
+  padding: clamp(12px, 2.5vh, 18px) 10px;
   border: 1px solid rgb(255 255 255 / 20%);
   background: rgb(0 0 0 / 25%);
   text-align: center;
@@ -1111,14 +1124,14 @@ h1 {
 }
 
 .bottom-two-card > strong {
-  margin-top: 8px;
+  margin-top: 6px;
   overflow-wrap: anywhere;
-  font-size: clamp(1.3rem, 7vw, 2rem);
+  font-size: clamp(1.05rem, 5.6vw, 1.5rem);
 }
 
 .bottom-two-card time {
-  margin-top: 14px;
-  font-size: clamp(1.15rem, 6vw, 1.7rem);
+  margin-top: 8px;
+  font-size: clamp(0.95rem, 5vw, 1.25rem);
   font-variant-numeric: tabular-nums;
   font-weight: 900;
 }
@@ -1144,10 +1157,11 @@ h1 {
 }
 
 .slowest-caption {
-  margin: clamp(20px, 4vh, 34px) auto 0;
+  margin: clamp(10px, 2.5vh, 18px) auto 0;
   max-width: 28rem;
   color: #fecaca;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.4;
   text-align: center;
   opacity: 0;
 }
@@ -1211,6 +1225,42 @@ h1 {
   animation-delay: 680ms;
 }
 
+.slide-active .reveal-delay-7 {
+  animation-delay: 800ms;
+}
+
+.slide-active .reveal-delay-8 {
+  animation-delay: 920ms;
+}
+
+.slide-active .reveal-delay-9 {
+  animation-delay: 1040ms;
+}
+
+.slide-active .reveal-delay-10 {
+  animation-delay: 1160ms;
+}
+
+.slide-active .reveal-delay-11 {
+  animation-delay: 1280ms;
+}
+
+.slide-active .reveal-delay-12 {
+  animation-delay: 1400ms;
+}
+
+.slide-active .reveal-delay-13 {
+  animation-delay: 1520ms;
+}
+
+.slide-active .reveal-delay-14 {
+  animation-delay: 1640ms;
+}
+
+.slide-active .reveal-delay-15 {
+  animation-delay: 1760ms;
+}
+
 @keyframes cascade-reveal {
   from {
     opacity: 0;
@@ -1220,6 +1270,20 @@ h1 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-item,
+  .slide-active .reveal-item,
+  .bottom-two-card,
+  .bottom-two-active .bottom-two-runner-up,
+  .bottom-two-active .bottom-two-winner,
+  .slowest-caption {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 }
 

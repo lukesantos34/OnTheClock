@@ -87,6 +87,95 @@ function formatTime(milliseconds, showTenths = false) {
   return showTenths ? `${baseTime}.${tenths}` : baseTime
 }
 
+function createShareSnapshot({
+  draftResults,
+  fastestPickPlayer,
+  slowestPickPlayer,
+  stoppages,
+}) {
+  return {
+    version: 1,
+    managerRankings: draftResults?.managerRankings ?? [],
+    totalElapsedTime: draftResults?.totalElapsedTime ?? 0,
+    activeDraftTime: draftResults?.activeDraftTime ?? 0,
+    totalStoppageTime: draftResults?.totalStoppageTime ?? 0,
+    fastestPick: draftResults?.fastestPick
+      ? {
+          ...draftResults.fastestPick,
+          player: fastestPickPlayer ?? '',
+        }
+      : null,
+    slowestPick: draftResults?.slowestPick
+      ? {
+          ...draftResults.slowestPick,
+          player: slowestPickPlayer ?? '',
+        }
+      : null,
+    fastestRound: draftResults?.fastestRound ?? null,
+    slowestRound: draftResults?.slowestRound ?? null,
+    stoppages: (stoppages ?? []).map((stoppage) => ({
+      id: stoppage.id,
+      name: stoppage.name,
+      duration: stoppage.duration,
+      overallPick: stoppage.overallPick,
+      round: stoppage.round,
+      manager: stoppage.manager,
+    })),
+  }
+}
+
+function encodeShareSnapshot(snapshot) {
+  const json = JSON.stringify(snapshot)
+  const bytes = new TextEncoder().encode(json)
+  let binary = ''
+
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte)
+  })
+
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
+}
+
+function decodeShareSnapshot(encoded) {
+  if (!encoded) {
+    return null
+  }
+
+  try {
+    const normalized = encoded
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+
+    const padding = '='.repeat((4 - (normalized.length % 4)) % 4)
+    const binary = atob(normalized + padding)
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+    const json = new TextDecoder().decode(bytes)
+    const parsed = JSON.parse(json)
+
+    if (!parsed || parsed.version !== 1) {
+      return null
+    }
+
+    return parsed
+  } catch (error) {
+    console.error('Unable to decode shared results:', error)
+    return null
+  }
+}
+
+function readSharedResultsFromHash(hash = window.location.hash) {
+  if (!hash.startsWith('#results=')) {
+    return null
+  }
+
+  const encoded = decodeURIComponent(hash.slice('#results='.length))
+
+  return decodeShareSnapshot(encoded)
+}
+
 function createTestDraftData() {
   const managerBaseTimes = {
     Declan: 28000,
@@ -338,9 +427,11 @@ function ResultsCarousel({
   stoppages,
   onRegenerateTestDraft,
   onClearTestDraft,
+  isSharedResults = false,
 }) {
   const carouselRef = useRef(null)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+  const [shareButtonLabel, setShareButtonLabel] = useState('Share Results')
 
   const fastestManager = draftResults.managerRankings[0]
 
@@ -436,6 +527,49 @@ function ResultsCarousel({
         resultSlides.length - 1,
       ),
     )
+  }
+
+  async function handleShareResults() {
+    const snapshot = createShareSnapshot({
+      draftResults,
+      fastestPickPlayer,
+      slowestPickPlayer,
+      stoppages,
+    })
+
+    const encoded = encodeShareSnapshot(snapshot)
+    const resultsUrl = `${window.location.origin}${window.location.pathname}#results=${encodeURIComponent(encoded)}`
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'On The Clock — Draft Results',
+          text: 'The clock has stopped. Here are the draft results.',
+          url: resultsUrl,
+        })
+        return
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return
+        }
+      }
+    }
+
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.clipboard?.writeText
+    ) {
+      try {
+        await navigator.clipboard.writeText(resultsUrl)
+        setShareButtonLabel('Link Copied!')
+
+        window.setTimeout(() => {
+          setShareButtonLabel('Share Results')
+        }, 1800)
+      } catch (error) {
+        console.error('Unable to copy shared results link:', error)
+      }
+    }
   }
 
   return (
@@ -662,7 +796,8 @@ function ResultsCarousel({
             </ol>
 
             <p className="ranking-warning reveal-item reveal-delay-7">
-              Only two managers remain.
+              Only {secondSlowestManager?.manager} and{' '}
+              {slowestManager?.manager} remain.
             </p>
           </div>
         </article>
@@ -747,7 +882,8 @@ function ResultsCarousel({
               DRUMROLL PLEASE...
             </p>
             <p className="slowest-caption slowest-caption-final">
-              {slowestManager?.manager} kept the league waiting longest.
+              {slowestManager?.manager} kept the league waiting longer
+              than anyone else.
             </p>
           </div>
         </article>
@@ -981,7 +1117,7 @@ function ResultsCarousel({
               </span>
             </footer>
 
-            {import.meta.env.DEV && (
+            {!isSharedResults && import.meta.env.DEV && (
               <section className="developer-tools results-dev-tools">
                 <p>Development tools</p>
 
@@ -1006,7 +1142,13 @@ function ResultsCarousel({
         </article>
       </section>
 
-      <nav className="results-navigation">
+      <nav
+        className={
+          !isSharedResults && activeSlideIndex === 9
+            ? 'results-navigation results-navigation-share-visible'
+            : 'results-navigation'
+        }
+      >
         <button
           type="button"
           onClick={() => goToSlide(activeSlideIndex - 1)}
@@ -1014,6 +1156,16 @@ function ResultsCarousel({
         >
           Previous
         </button>
+
+        {!isSharedResults && activeSlideIndex === 9 && (
+          <button
+            type="button"
+            className="share-results-button"
+            onClick={handleShareResults}
+          >
+            {shareButtonLabel}
+          </button>
+        )}
 
         <button
           type="button"
@@ -1098,7 +1250,15 @@ function App() {
   )
 
   const [postDraftDetailsComplete, setPostDraftDetailsComplete] =
-    useState(savedDraft?.postDraftDetailsComplete ?? false)  
+    useState(savedDraft?.postDraftDetailsComplete ?? false)
+
+  const [sharedResultsData] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+
+    return readSharedResultsFromHash(window.location.hash)
+  })
 
   const currentPick = draftOrder[currentPickIndex]
   const nextPick = draftOrder[currentPickIndex + 1]
@@ -1159,6 +1319,10 @@ function App() {
   }, [draftStarted, isPaused])
 
   useEffect(() => {
+  if (sharedResultsData) {
+    return
+  }
+
     const stateToSave = {
       version: 1,
       draftStarted,
@@ -1206,6 +1370,7 @@ function App() {
     fastestPickPlayer,
     slowestPickPlayer,
     postDraftDetailsComplete,
+    sharedResultsData,
   ])
 
   function handleStartDraft() {
@@ -1411,6 +1576,33 @@ function App() {
     setSlowestPickPlayer(trimmedSlowestPlayer)
     setPostDraftDetailsComplete(true)
   }  
+
+  const sharedResultsMode = Boolean(sharedResultsData)
+
+  if (sharedResultsMode) {
+    const sharedDraftResults = {
+      managerRankings: sharedResultsData?.managerRankings ?? [],
+      totalElapsedTime: sharedResultsData?.totalElapsedTime ?? 0,
+      activeDraftTime: sharedResultsData?.activeDraftTime ?? 0,
+      totalStoppageTime: sharedResultsData?.totalStoppageTime ?? 0,
+      fastestRound: sharedResultsData?.fastestRound ?? null,
+      slowestRound: sharedResultsData?.slowestRound ?? null,
+      fastestPick: sharedResultsData?.fastestPick ?? null,
+      slowestPick: sharedResultsData?.slowestPick ?? null,
+    }
+
+    return (
+      <ResultsCarousel
+        draftResults={sharedDraftResults}
+        fastestPickPlayer={sharedResultsData?.fastestPick?.player ?? ''}
+        slowestPickPlayer={sharedResultsData?.slowestPick?.player ?? ''}
+        stoppages={sharedResultsData?.stoppages ?? []}
+        onRegenerateTestDraft={handleGenerateTestDraft}
+        onClearTestDraft={handleClearTestDraft}
+        isSharedResults
+      />
+    )
+  }
 
   if (
     draftCompleted &&

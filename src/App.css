@@ -1016,17 +1016,6 @@ h1 {
   }
 }
 
-.lightning-decoration {
-  position: absolute;
-  inset: 17% 0 auto;
-  display: flex;
-  justify-content: space-around;
-  pointer-events: none;
-  opacity: 0.11;
-  font-size: clamp(4rem, 22vw, 8rem);
-  transform: rotate(-8deg);
-}
-
 .ranking-group-content {
   margin-top: clamp(22px, 6vh, 54px);
 }
@@ -1096,18 +1085,17 @@ h1 {
 .bottom-two-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   margin-top: clamp(16px, 4vh, 28px);
 }
 
 .bottom-two-card {
   min-width: 0;
-  padding: clamp(12px, 2.5vh, 18px) 10px;
+  aspect-ratio: 1 / 0.9;
+  padding: 10px;
   border: 1px solid rgb(255 255 255 / 20%);
   background: rgb(0 0 0 / 25%);
   text-align: center;
-  opacity: 0;
-  transform: translateY(34px);
 }
 
 .bottom-two-card > span,
@@ -1148,12 +1136,52 @@ h1 {
   background: rgb(127 29 29 / 35%);
 }
 
-.bottom-two-active .bottom-two-runner-up {
-  animation: reveal-ranking 450ms ease forwards;
+.bottom-two-card-rank,
+.bottom-two-card-name,
+.bottom-two-card-time,
+.bottom-two-card-label,
+.slowest-caption {
+  opacity: 1;
+  transform: none;
 }
 
-.bottom-two-active .bottom-two-winner {
-  animation: reveal-ranking 550ms ease 850ms forwards;
+.bottom-two-card-rank-suspense,
+.bottom-two-card-name-suspense,
+.bottom-two-card-time-suspense,
+.bottom-two-card-label-suspense,
+.slowest-caption-suspense {
+  opacity: 1;
+}
+
+.bottom-two-card-rank-final,
+.bottom-two-card-name-final,
+.bottom-two-card-time-final,
+.bottom-two-card-label-final,
+.slowest-caption-final {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.bottom-two-active .bottom-two-card-rank-suspense,
+.bottom-two-active .bottom-two-card-name-suspense,
+.bottom-two-active .bottom-two-card-time-suspense,
+.bottom-two-active .bottom-two-card-label-suspense,
+.bottom-two-active .slowest-caption-suspense {
+  animation: bottom-two-suspense-out 220ms ease forwards;
+  animation-delay: 1100ms;
+}
+
+.bottom-two-active .bottom-two-card-rank-final,
+.bottom-two-active .bottom-two-card-name-final,
+.bottom-two-active .bottom-two-card-time-final,
+.bottom-two-active .bottom-two-card-label-final {
+  animation: bottom-two-final-in 250ms ease forwards;
+  animation-delay: 1100ms;
+}
+
+.bottom-two-active .slowest-caption-final {
+  animation: bottom-two-final-in 250ms ease forwards;
+  animation-delay: 1700ms;
 }
 
 .slowest-caption {
@@ -1163,32 +1191,34 @@ h1 {
   font-size: 0.9rem;
   line-height: 1.4;
   text-align: center;
+}
+
+.slowest-caption-suspense {
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.slowest-caption-final {
   opacity: 0;
 }
 
-.bottom-two-active .slowest-caption {
-  animation: reveal-caption 500ms ease 1.5s forwards;
+@keyframes bottom-two-suspense-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }
 
-@keyframes reveal-ranking {
+@keyframes bottom-two-final-in {
   from {
     opacity: 0;
-    transform: translateY(34px) scale(0.96);
+    transform: translateY(8px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes reveal-caption {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
+    transform: translateY(0);
   }
 }
 

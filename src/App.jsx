@@ -561,12 +561,6 @@ function ResultsCarousel({
         >
           <div className="slide-kicker">Fastest Drafter</div>
 
-          <div className="lightning-decoration" aria-hidden="true">
-            <span>⚡</span>
-            <span>⚡</span>
-            <span>⚡</span>
-          </div>
-
           <div className="slide-main-content centered-slide-content">
             <p className="giant-ranking-number reveal-item reveal-delay-1">
               #1
@@ -689,33 +683,71 @@ function ResultsCarousel({
 
             <div className="bottom-two-grid">
               <section className="bottom-two-card bottom-two-runner-up">
-                <span>#11</span>
+                <span className="bottom-two-card-rank bottom-two-card-rank-suspense">
+                  ???
+                </span>
+                <span className="bottom-two-card-rank bottom-two-card-rank-final">
+                  #11
+                </span>
 
-                <strong>{secondSlowestManager?.manager}</strong>
+                <strong className="bottom-two-card-name bottom-two-card-name-suspense">
+                  ???
+                </strong>
+                <strong className="bottom-two-card-name bottom-two-card-name-final">
+                  {secondSlowestManager?.manager}
+                </strong>
 
-                <time>
+                <time className="bottom-two-card-time bottom-two-card-time-suspense">
+                  ???
+                </time>
+                <time className="bottom-two-card-time bottom-two-card-time-final">
                   {formatTime(secondSlowestManager?.totalTime ?? 0)}
                 </time>
 
-                <small>Second longest</small>
+                <small className="bottom-two-card-label bottom-two-card-label-suspense">
+                  Second longest
+                </small>
+                <small className="bottom-two-card-label bottom-two-card-label-final">
+                  Second longest
+                </small>
               </section>
 
               <section className="bottom-two-card bottom-two-winner">
-                <span>#12</span>
+                <span className="bottom-two-card-rank bottom-two-card-rank-suspense">
+                  ???
+                </span>
+                <span className="bottom-two-card-rank bottom-two-card-rank-final">
+                  #12
+                </span>
 
-                <strong>{slowestManager?.manager}</strong>
+                <strong className="bottom-two-card-name bottom-two-card-name-suspense">
+                  ???
+                </strong>
+                <strong className="bottom-two-card-name bottom-two-card-name-final">
+                  {slowestManager?.manager}
+                </strong>
 
-                <time>
+                <time className="bottom-two-card-time bottom-two-card-time-suspense">
+                  ???
+                </time>
+                <time className="bottom-two-card-time bottom-two-card-time-final">
                   {formatTime(slowestManager?.totalTime ?? 0)}
                 </time>
 
-                <small>Longest on the clock</small>
+                <small className="bottom-two-card-label bottom-two-card-label-suspense">
+                  Longest on the clock
+                </small>
+                <small className="bottom-two-card-label bottom-two-card-label-final">
+                  Longest on the clock
+                </small>
               </section>
             </div>
 
-            <p className="slowest-caption">
-              {slowestManager?.manager} kept the league waiting longer
-              than anyone else.
+            <p className="slowest-caption slowest-caption-suspense">
+              DRUMROLL PLEASE...
+            </p>
+            <p className="slowest-caption slowest-caption-final">
+              {slowestManager?.manager} kept the league waiting longest.
             </p>
           </div>
         </article>

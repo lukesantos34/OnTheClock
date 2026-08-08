@@ -538,14 +538,19 @@ function ResultsCarousel({
     })
 
     const encoded = encodeShareSnapshot(snapshot)
-    const resultsUrl = `${window.location.origin}${window.location.pathname}#results=${encodeURIComponent(encoded)}`
+
+    if (!encoded) {
+      return
+    }
+
+    const shareUrl = `${window.location.origin}/#results=${encoded}`
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: 'On The Clock — Draft Results',
           text: 'The clock has stopped. Here are the draft results.',
-          url: resultsUrl,
+          url: shareUrl,
         })
         return
       } catch (error) {
@@ -560,7 +565,7 @@ function ResultsCarousel({
       navigator.clipboard?.writeText
     ) {
       try {
-        await navigator.clipboard.writeText(resultsUrl)
+        await navigator.clipboard.writeText(shareUrl)
         setShareButtonLabel('Link Copied!')
 
         window.setTimeout(() => {

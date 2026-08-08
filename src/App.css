@@ -886,48 +886,45 @@ h1 {
 }
 
 .standings-content {
-  margin-top: 24px;
+  margin-top: 10px;
+}
+
+.standings-content h1 {
+  font-size: clamp(1.9rem, 9vw, 3.2rem);
 }
 
 .story-standings {
   display: grid;
   gap: 5px;
-  margin: 24px 0 0;
+  margin: 10px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .story-standings li {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 9px 11px;
+  gap: 8px;
+  min-height: 31px;
+  padding: 4px 7px;
   border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 
 .story-standings li > span {
   color: #f59e0b;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 900;
 }
 
-.story-standings li div {
+.standings-manager-name {
   min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
 }
 
-.story-standings li div strong,
-.story-standings li small {
-  display: block;
-}
-
-.story-standings li small {
-  margin-top: 2px;
-  color: #9ca3af;
-  font-size: 0.67rem;
-}
-
-.story-standings li > strong {
+.standings-manager-time {
+  font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -935,10 +932,10 @@ h1 {
 .standings-footer {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 8px;
   color: #9ca3af;
-  font-size: 0.72rem;
+  font-size: 0.62rem;
 }
 
 .results-dev-tools {
@@ -1178,6 +1175,51 @@ h1 {
 
   to {
     opacity: 1;
+  }
+}
+
+.reveal-item {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.slide-active .reveal-item {
+  animation: cascade-reveal 500ms ease forwards;
+}
+
+.slide-active .reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.slide-active .reveal-delay-2 {
+  animation-delay: 200ms;
+}
+
+.slide-active .reveal-delay-3 {
+  animation-delay: 320ms;
+}
+
+.slide-active .reveal-delay-4 {
+  animation-delay: 440ms;
+}
+
+.slide-active .reveal-delay-5 {
+  animation-delay: 560ms;
+}
+
+.slide-active .reveal-delay-6 {
+  animation-delay: 680ms;
+}
+
+@keyframes cascade-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

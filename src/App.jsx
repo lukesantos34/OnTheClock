@@ -471,20 +471,30 @@ function ResultsCarousel({
         className="results-carousel"
         onScroll={handleCarouselScroll}
       >
-        <article className="result-slide result-slide-summary">
+            <article
+              className={
+                activeSlideIndex === 0
+                  ? 'result-slide result-slide-summary slide-active'
+                  : 'result-slide result-slide-summary'
+              }
+            >
           <div className="slide-kicker">On The Clock</div>
 
           <div className="slide-main-content">
-            <p className="slide-overline">The clock has stopped</p>
-
-            <h1>Draft Complete.</h1>
-
-            <p className="slide-description">
-              Sixteen rounds. Twelve managers. One final answer to
-              who spent the most time on the clock.
+            <p className="slide-overline reveal-item reveal-delay-1">
+              The clock has stopped
             </p>
 
-            <div className="hero-time">
+          <h1 className="reveal-item reveal-delay-2">
+            Draft Complete.
+          </h1>
+
+          <p className="slide-description reveal-item reveal-delay-3">
+            Sixteen rounds. Twelve managers. One final answer to
+            who spent the most time on the clock.
+          </p>
+
+            <div className="hero-time reveal-item reveal-delay-4">
               <span>Total elapsed time</span>
 
               <strong>
@@ -494,7 +504,7 @@ function ResultsCarousel({
               <small>Including all stoppages</small>
             </div>
 
-            <div className="summary-time-grid">
+            <div className="summary-time-grid reveal-item reveal-delay-5">
               <div>
                 <span>Active drafting</span>
                 <strong>
@@ -654,7 +664,7 @@ function ResultsCarousel({
             </div>
 
             <p className="slowest-caption">
-              {slowestManager?.manager} kept the war room waiting longer
+              {slowestManager?.manager} kept the league waiting longer
               than anyone else.
             </p>
           </div>
@@ -668,7 +678,7 @@ function ResultsCarousel({
               Lightning fast vs. painfully slow
             </p>
 
-            <h1>Two unforgettable picks.</h1>
+            <h1>Two picks. Two extremes.</h1>
 
             <div className="story-record-card">
               <span>Fastest Pick</span>
@@ -825,19 +835,11 @@ function ResultsCarousel({
                   <li key={managerResult.manager}>
                     <span>#{index + 1}</span>
 
-                    <div>
-                      <strong>{managerResult.manager}</strong>
+                    <strong className="standings-manager-name">
+                      {managerResult.manager}
+                    </strong>
 
-                      <small>
-                        Avg.{' '}
-                        {formatTime(
-                          managerResult.averagePickTime,
-                          true,
-                        )}
-                      </small>
-                    </div>
-
-                    <strong>
+                    <strong className="standings-manager-time">
                       {formatTime(managerResult.totalTime)}
                     </strong>
                   </li>
